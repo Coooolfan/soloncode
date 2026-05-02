@@ -1,5 +1,7 @@
-target/
-!.mvn/wrapper/maven-wrapper.jar
+### Gradle ###
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
 
 ### STS ###
 .apt_generated
@@ -17,6 +19,7 @@ target/
 *.ipr
 *.log
 *.flattened-pom.xml
+local.properties
 *.md
 !soloncode-cli/docs/*.md
 
