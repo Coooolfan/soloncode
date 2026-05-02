@@ -1,8 +1,10 @@
 [versions]
 solon = "3.10.5-SNAPSHOT"
-shadow = "8.3.6"
+shadow = "9.4.1"
 jline = "3.30.9"
 lombok = "1.18.44"
+graalvmNativePlugin = "0.11.3"
+asm = "9.5"
 
 [libraries]
 solon-parent = { module = "org.noear:solon-parent", version.ref = "solon" }
@@ -17,9 +19,12 @@ solon-web-sse = { module = "org.noear:solon-web-sse" }
 solon-logging-logback = { module = "org.noear:solon-logging-logback" }
 solon-web-cors = { module = "org.noear:solon-web-cors" }
 solon-test = { module = "org.noear:solon-test" }
+solon-aot = { module = "org.noear:solon-aot" }
 jansi = { module = "org.fusesource.jansi:jansi" }
 jline = { module = "org.jline:jline", version.ref = "jline" }
 lombok = { module = "org.projectlombok:lombok", version.ref = "lombok" }
+graalvm-native-plugin = { module = "org.graalvm.buildtools:native-gradle-plugin", version.ref = "graalvmNativePlugin" }
+asm = { module = "org.ow2.asm:asm", version.ref = "asm" }
 
 [plugins]
 shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }

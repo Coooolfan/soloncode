@@ -1,0 +1,12 @@
+{
+  "resources": {
+    "includes": [
+      {"pattern": "config\\.yml"},
+      {"pattern": "AGENTS\\.md"},
+      {"pattern": "logback\\.xml"},
+      {"pattern": "static/.*"},
+      {"pattern": "version\\.properties"}
+    ]
+  },
+  "bundles": []
+}

@@ -1,7 +1,11 @@
+import org.graalvm.buildtools.gradle.tasks.BuildNativeImageTask
+
 plugins {
     java
     application
     alias(libs.plugins.shadow)
+    id("org.graalvm.buildtools.native")
+    id("org.noear.solon.native")
 }
 
 group = "org.noear"
@@ -19,8 +23,8 @@ dependencies {
     implementation(libs.solon.web.sse)
     implementation(libs.solon.web.cors)
     implementation(libs.solon.logging.logback)
+    implementation(libs.solon.aot)
 
-    implementation(libs.jansi)
     implementation(libs.jline) {
         exclude(group = "org.fusesource.jansi", module = "jansi")
     }
@@ -35,9 +39,18 @@ application {
     mainClass.set("org.noear.solon.codecli.App")
 }
 
+extensions.configure(org.noear.solon.gradle.dsl.SolonExtension::class.java) {
+    mainClass.set("org.noear.solon.codecli.App")
+}
+
 tasks.named<JavaExec>("run") {
     standardInput = System.`in`
     jvmArgs("--add-opens", "java.base/sun.misc=ALL-UNNAMED")
+}
+
+tasks.withType<BuildNativeImageTask> {
+    val buildArgs = this.options.get().buildArgs
+    buildArgs.add("-march=compatibility")
 }
 
 tasks.shadowJar {

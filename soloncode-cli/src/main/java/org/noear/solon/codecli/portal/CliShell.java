@@ -92,7 +92,7 @@ public class CliShell implements Runnable {
 
         try {
             this.terminal = TerminalBuilder.builder()
-                    .jna(true).jansi(true).system(true).dumb(true)
+                    .system(true).dumb(true)
                     .encoding(StandardCharsets.UTF_8)
                     .build();
 

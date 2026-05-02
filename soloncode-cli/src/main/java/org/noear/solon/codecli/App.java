@@ -36,11 +36,19 @@ import java.nio.file.Paths;
 public class App {
 
     public static void main(String[] args) {
-        AgentProperties agentProps = new AgentProperties();
+        System.err.println("[debug] App.main entered, args=" + java.util.Arrays.toString(args));
+        try {
+            AgentProperties agentProps = new AgentProperties();
 
-        Solon.start(App.class, args, app -> {
-            initAgentProperties(app, agentProps);
-        });
+            Solon.start(App.class, args, app -> {
+                initAgentProperties(app, agentProps);
+            });
+            System.err.println("[debug] Solon.start returned normally");
+        } catch (Throwable t) {
+            System.err.println("[debug] startup failed: " + t);
+            t.printStackTrace(System.err);
+            System.exit(2);
+        }
     }
 
     private static void initAgentProperties(SolonApp app, AgentProperties c) throws Exception {

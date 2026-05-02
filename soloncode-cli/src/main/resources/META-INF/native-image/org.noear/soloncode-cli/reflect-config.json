@@ -1,0 +1,34 @@
+[
+  {
+    "name": "org.noear.solon.codecli.config.AgentProperties",
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true,
+    "queryAllPublicConstructors": true
+  },
+  {
+    "name": "org.noear.solon.ai.harness.HarnessProperties",
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true,
+    "queryAllPublicConstructors": true
+  },
+  {
+    "name": "org.noear.solon.ai.chat.ChatConfig",
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true,
+    "queryAllPublicConstructors": true
+  },
+  {
+    "name": "org.noear.solon.codecli.provider.ModelInfo",
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true,
+    "queryAllPublicConstructors": true
+  }
+]
