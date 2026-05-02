@@ -42,7 +42,7 @@ native 下不可能加载未编译的外部 jar；本期不做"hybrid 子进程 
 | 删除依赖 | `soloncode-cli/build.gradle.kts:18` 的 `solon-view-thymeleaf` |
 | 模板移位 | `src/main/resources/templates/chat.html` → `src/main/resources/static/index.html`；移除 `xmlns:th` 命名空间和所有 `${...}` 占位 |
 | 删除控制器方法 | `portal/WebController.java:182-191` 的 `chat()` |
-| 改由静态文件托管 | `solon-web-staticfiles` 自动响应 `GET /` → `index.html` |
+| 入口改为 302 重定向 | `solon-web-staticfiles` 不会把 `GET /` 当索引页，需保留一个最小 `@Mapping("/")` 控制器方法做 `ctx.redirect("/index.html")`（原生友好，无反射） |
 | 新增 JSON meta 接口 | `GET /chat/meta` 返回 `{appTitle, appVersion, workspace, workname}`；前端启动后 fetch 一次回填页面标题 / 侧栏 |
 
 ### 弃用 `solon.extend`

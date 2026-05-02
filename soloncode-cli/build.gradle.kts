@@ -15,7 +15,6 @@ dependencies {
     implementation(libs.solon.ai.skill.memory)
     implementation(libs.solon.scheduling.simple)
     implementation(libs.solon.server.smarthttp)
-    implementation(libs.solon.view.thymeleaf)
     implementation(libs.solon.web.staticfiles)
     implementation(libs.solon.web.sse)
     implementation(libs.solon.web.cors)
