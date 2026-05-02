@@ -20,7 +20,6 @@ build/
 *.log
 *.flattened-pom.xml
 local.properties
-*.md
 !soloncode-cli/docs/*.md
 
 ### NetBeans ###
