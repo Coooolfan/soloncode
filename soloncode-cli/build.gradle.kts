@@ -36,6 +36,11 @@ application {
     mainClass.set("org.noear.solon.codecli.App")
 }
 
+tasks.named<JavaExec>("run") {
+    standardInput = System.`in`
+    jvmArgs("--add-opens", "java.base/sun.misc=ALL-UNNAMED")
+}
+
 tasks.shadowJar {
     archiveBaseName.set("soloncode-cli")
     archiveClassifier.set("")
