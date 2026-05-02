@@ -38,9 +38,6 @@ public class App {
     public static void main(String[] args) {
         AgentProperties agentProps = new AgentProperties();
 
-        //配置用户扩展目录
-       System.setProperty("solon.extend", "!" + agentProps.getUserExtensions());
-
         Solon.start(App.class, args, app -> {
             initAgentProperties(app, agentProps);
         });
