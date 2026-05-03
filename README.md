@@ -1,7 +1,7 @@
 <div align="center">
 <h1>SolonCode</h1>
 <p>An open-source coding agent built with <a href="https://github.com/opensolon/solon-ai">Solon AI</a> and Java (supports Java8 to Java26 runtime environments)</p>
-<p>Latest Version: 0.1.0-native</p>
+<p>Latest Version: 0.1.3</p>
 <img height="260" src="docs/SHOW.png" />
 <img height="260" src="docs/SHOW2.png" />
 </div>
@@ -28,7 +28,7 @@ Main differences from upstream:
 * **Release packaging and CI**: added GitHub Actions for multi-platform CLI native builds, JAR builds, and release archives.
 * **Static Web UI packaging**: moved the Web UI to static resources and removed the Thymeleaf runtime dependency from the CLI module.
 * **Extension support removed**: removed the `solon.extend` user extension loading path.
-* **Fork-specific versioning**: uses its own `0.1.0-native` version line and disables upstream update checks.
+* **Fork-specific versioning**: uses its own `0.1.3` version line and disables upstream update checks.
 * **Documentation layout**: keeps the main English README at the repository root and stores localized READMEs and screenshots under `docs/`.
 
 PRs and Issues are accepted, but this fork does not guarantee fixes or commit to ongoing maintenance.
@@ -57,7 +57,7 @@ Run the `soloncode` command from any directory in the console (i.e., your worksp
 
 ```bash
 demo@MacBook-Pro ~ % soloncode
-SolonCode 0.1.0-native
+SolonCode 0.1.3
 /Users/noear
 Tips: (esc) interrupt | /(tab) ls command | @(tab) ls agent
 

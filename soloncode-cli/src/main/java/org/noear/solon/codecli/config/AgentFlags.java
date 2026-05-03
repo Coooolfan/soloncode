@@ -12,7 +12,7 @@ public class AgentFlags {
     public final static String FLAG_WEB = "web";
 
     public static String getVersion() {
-        return "0.1.0-native";
+        return "0.1.3";
     }
 
     public static String getLastVersion() {
