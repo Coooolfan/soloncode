@@ -91,10 +91,21 @@ public class CliShell implements Runnable {
         this.loopScheduler = loopScheduler;
 
         try {
-            this.terminal = TerminalBuilder.builder()
-                    .system(true).dumb(true)
-                    .encoding(StandardCharsets.UTF_8)
-                    .build();
+            TerminalBuilder terminalBuilder = TerminalBuilder.builder()
+                    .system(true)
+                    .dumb(true)
+                    .encoding(StandardCharsets.UTF_8);
+
+            if ("runtime".equals(System.getProperty("org.graalvm.nativeimage.imagecode"))) {
+                terminalBuilder.provider("dumb")
+                        .ffm(false)
+                        .jni(false)
+                        .jna(false)
+                        .jansi(false)
+                        .exec(false);
+            }
+
+            this.terminal = terminalBuilder.build();
 
             this.reader = LineReaderBuilder.builder()
                     .terminal(terminal)
