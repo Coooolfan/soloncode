@@ -177,6 +177,21 @@ jobs:
           ./gradlew :soloncode-cli:nativeCompile
           ./gradlew --stop || true
 
+      - name: 安装 UPX
+        run: |
+          case "$RUNNER_OS" in
+            Linux)
+              sudo apt-get update
+              sudo apt-get install -y upx-ucl
+              ;;
+            macOS)
+              brew install upx
+              ;;
+            Windows)
+              choco install upx -y --no-progress
+              ;;
+          esac
+
       - name: 整理 Native 产物
         run: |
           cd soloncode-cli/build/native/nativeCompile
@@ -188,6 +203,24 @@ jobs:
             chmod +x "${ARTIFACT_BASE}"
           fi
           ls -al
+
+      - name: 压缩 Native 二进制
+        run: |
+          cd soloncode-cli/build/native/nativeCompile
+          ARTIFACT_BASE="soloncode-cli-${{ matrix.os_name }}-${{ matrix.arch }}-v${VERSION}"
+          if [ "${{ matrix.os_name }}" = "windows" ]; then
+            BINARY="${ARTIFACT_BASE}.exe"
+          else
+            BINARY="${ARTIFACT_BASE}"
+          fi
+
+          BEFORE_SIZE=$(wc -c < "$BINARY")
+          if upx --best --lzma "$BINARY"; then
+            AFTER_SIZE=$(wc -c < "$BINARY")
+            echo "Compressed $BINARY: ${BEFORE_SIZE} -> ${AFTER_SIZE} bytes"
+          else
+            echo "::warning::UPX failed for $BINARY; uploading the uncompressed binary."
+          fi
 
       - name: 上传编译产物
         uses: actions/upload-artifact@v4
