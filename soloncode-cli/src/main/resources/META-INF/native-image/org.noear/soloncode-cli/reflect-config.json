@@ -66,6 +66,138 @@
     "queryAllPublicConstructors": true
   },
   {
+    "name": "org.noear.solon.ai.skills.cli.TodoSkill",
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true,
+    "queryAllPublicConstructors": true,
+    "queryAllDeclaredMethods": true
+  },
+  {
+    "name": "org.noear.solon.ai.skills.cli.ExpertSkill",
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true,
+    "queryAllPublicConstructors": true,
+    "queryAllDeclaredMethods": true
+  },
+  {
+    "name": "org.noear.solon.ai.harness.agent.TaskSkill",
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true,
+    "queryAllPublicConstructors": true,
+    "queryAllDeclaredMethods": true
+  },
+  {
+    "name": "org.noear.solon.ai.harness.agent.TaskSkill$SingleTaskOp",
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true,
+    "queryAllPublicConstructors": true
+  },
+  {
+    "name": "org.noear.solon.ai.harness.agent.TaskSkill$MultiTaskOp",
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true,
+    "queryAllPublicConstructors": true
+  },
+  {
+    "name": "org.noear.solon.ai.harness.agent.GenerateTool",
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true,
+    "queryAllPublicConstructors": true,
+    "queryAllDeclaredMethods": true
+  },
+  {
+    "name": "org.noear.solon.ai.harness.code.CodeSkill",
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true,
+    "queryAllPublicConstructors": true,
+    "queryAllDeclaredMethods": true
+  },
+  {
+    "name": "org.noear.solon.ai.skills.web.WebsearchTool",
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true,
+    "queryAllPublicConstructors": true,
+    "queryAllDeclaredMethods": true
+  },
+  {
+    "name": "org.noear.solon.ai.skills.web.WebfetchTool",
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true,
+    "queryAllPublicConstructors": true,
+    "queryAllDeclaredMethods": true
+  },
+  {
+    "name": "org.noear.solon.ai.skills.web.CodeSearchTool",
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true,
+    "queryAllPublicConstructors": true,
+    "queryAllDeclaredMethods": true
+  },
+  {
+    "name": "org.noear.solon.ai.skills.memory.MemorySkill",
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true,
+    "queryAllPublicConstructors": true,
+    "queryAllDeclaredMethods": true
+  },
+  {
+    "name": "org.noear.solon.ai.skills.lsp.LspSkill",
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true,
+    "queryAllPublicConstructors": true,
+    "queryAllDeclaredMethods": true
+  },
+  {
+    "name": "org.noear.solon.ai.skills.restapi.RestApiSkill",
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true,
+    "queryAllPublicConstructors": true,
+    "queryAllDeclaredMethods": true
+  },
+  {
+    "name": "org.noear.solon.ai.skills.toolgateway.ToolGatewaySkill",
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true,
+    "queryAllPublicConstructors": true,
+    "queryAllDeclaredMethods": true
+  },
+  {
+    "name": "org.noear.solon.ai.skills.toolgateway.ToolGatewaySkill$ToolCallTool",
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true,
+    "queryAllPublicConstructors": true
+  },
+  {
     "name": "org.noear.solon.ai.harness.agent.AgentDefinition",
     "allDeclaredConstructors": true,
     "allDeclaredFields": true,

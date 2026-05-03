@@ -6,7 +6,7 @@
       {"pattern": "logback\\.xml"},
       {"pattern": "static/.*"},
       {"pattern": "version\\.properties"},
-      {"pattern": "META-INF/solon/ai/harness/.*"},
+      {"pattern": "META-INF/solon/.*"},
       {"pattern": "com/knuddels/jtokkit/.*\\.tiktoken"}
     ]
   },
