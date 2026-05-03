@@ -194,12 +194,10 @@ public class WebStreamBuilder {
         Long start_time = react.getTrace().getOriginalPrompt().attrAs("start_time");
 
 
-        buf.append(" (");
-
         buf.append(react.getTrace().getOptions().getChatModel().getNameOrModel());
 
         if (react.getTrace().getMetrics() != null) {
-            if (buf.length() > 2) {
+            if (buf.length() > 0) {
                 buf.append(", ");
             }
 
@@ -207,7 +205,7 @@ public class WebStreamBuilder {
         }
 
         if (start_time != null) {
-            if (buf.length() > 2) {
+            if (buf.length() > 0) {
                 buf.append(", ");
             }
 
@@ -215,9 +213,7 @@ public class WebStreamBuilder {
             buf.append(seconds).append(" seconds");
         }
 
-        buf.append(")");
-
-        return new ONode().set("type", "text")
+        return new ONode().set("type", "metrics")
                 .set("text", buf.toString())
                 .toJson();
     }

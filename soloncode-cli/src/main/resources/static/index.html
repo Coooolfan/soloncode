@@ -140,7 +140,7 @@
         .msg-row.user .msg-avatar { background: var(--bg-hover); color: var(--text-secondary); }
 
         .msg-bubble { max-width: 75%; line-height: 1.75; word-break: break-word; }
-        .msg-row.user .msg-bubble { background: var(--bg-user-msg); color: var(--text-user-msg); padding: 12px 18px; border-radius: 20px 20px 4px 20px; font-size: 14px; }
+        .msg-row.user .msg-bubble { background: var(--bg-user-msg); color: var(--text-user-msg); padding: 12px 18px; border-radius: 20px 4px 20px 20px; font-size: 14px; }
         .msg-row.assistant .msg-bubble { max-width: 88%; min-width: 88%; }
 
         /* Markdown */
@@ -163,6 +163,7 @@
         .md-content th { background: var(--bg-hover); font-weight: 600; }
         .md-content img { max-width: 100%; border-radius: 8px; }
         .md-content hr { border: none; border-top: 1px solid var(--border-color); margin: 14px 0; }
+        .metrics-content { margin-top: 6px; color: var(--text-secondary); font-size: 12px; line-height: 1.5; }
 
         /* Tool Card */
         .tool-card { margin: 10px 0; border: 1px solid var(--border-color); border-radius: 10px; overflow: hidden; transition: border-color 0.2s; }
@@ -1706,6 +1707,15 @@
             if (sess.sessionId === activeSessionId) scrollToBottom();
         }
 
+        function appendMetricsChunk(sess, text) {
+            ensureAssistantBubble(sess);
+            var metricsEl = document.createElement('div');
+            metricsEl.className = 'metrics-content';
+            metricsEl.textContent = text || '';
+            insertBeforeActions(sess, metricsEl);
+            if (sess.sessionId === activeSessionId) scrollToBottom();
+        }
+
         /* ===== Command Output ===== */
         function appendCommandOutput(sess, text) {
             ensureAssistantBubble(sess);
@@ -1942,6 +1952,7 @@
                     case 'agent':  finishThinkingBlock(sess); finishPendingTool(sess); appendContentChunk(sess, chunk.text, false); break;
                     case 'error':  finishThinkingBlock(sess); appendErrorChunk(sess, chunk.text); break;
                     case 'hitl':   finishThinkingBlock(sess); finishPendingTool(sess); appendHitlCard(sess, chunk.toolName, chunk.command); break;
+                    case 'metrics': finishThinkingBlock(sess); finishPendingTool(sess); appendMetricsChunk(sess, chunk.text); break;
                 }
                 sess.silenceTimer = setTimeout(function() {
                     if (sess.isStreaming && !sess.thinkingBlockEl) showInlineThinking(sess);
