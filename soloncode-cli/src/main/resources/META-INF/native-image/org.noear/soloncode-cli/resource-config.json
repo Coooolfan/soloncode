@@ -5,7 +5,8 @@
       {"pattern": "AGENTS\\.md"},
       {"pattern": "logback\\.xml"},
       {"pattern": "static/.*"},
-      {"pattern": "version\\.properties"}
+      {"pattern": "version\\.properties"},
+      {"pattern": "com/knuddels/jtokkit/.*\\.tiktoken"}
     ]
   },
   "bundles": []

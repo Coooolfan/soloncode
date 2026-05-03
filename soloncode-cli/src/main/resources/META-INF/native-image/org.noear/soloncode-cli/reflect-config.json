@@ -30,5 +30,150 @@
     "allDeclaredMethods": true,
     "allPublicMethods": true,
     "queryAllPublicConstructors": true
+  },
+  {
+    "name": "org.noear.solon.ai.harness.agent.AgentDefinition",
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true,
+    "queryAllPublicConstructors": true
+  },
+  {
+    "name": "org.noear.solon.ai.harness.agent.AgentDefinition$Metadata",
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true,
+    "queryAllPublicConstructors": true
+  },
+  {
+    "name": "org.noear.solon.ai.chat.message.ChatMessageBase",
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "org.noear.solon.ai.chat.message.UserMessage",
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "org.noear.solon.ai.chat.message.AssistantMessage",
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "org.noear.solon.ai.chat.message.SystemMessage",
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "org.noear.solon.ai.chat.message.ToolMessage",
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "org.noear.solon.ai.chat.message.SystemMessageTemplate",
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "org.noear.solon.ai.chat.message.UserMessageTemplate",
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "org.noear.solon.ai.chat.ChatRole",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "fields": [
+      {"name": "USER"},
+      {"name": "ASSISTANT"},
+      {"name": "SYSTEM"},
+      {"name": "TOOL"}
+    ]
+  },
+  {
+    "name": "org.noear.solon.ai.chat.content.ContentBlock",
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "org.noear.solon.ai.chat.content.TextBlock",
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "org.noear.solon.ai.chat.content.ImageBlock",
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "org.noear.solon.ai.chat.content.AudioBlock",
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "org.noear.solon.ai.chat.content.VideoBlock",
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "org.noear.solon.ai.chat.content.BlobBlock",
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "org.noear.solon.ai.chat.content.ResourceBlock",
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "org.noear.solon.ai.chat.content.MessageBlock",
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "org.noear.solon.ai.chat.content.MediaBlock",
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "org.noear.solon.ai.chat.content.AbsMedia",
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "org.noear.solon.ai.chat.content.Contents",
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "org.noear.solon.ai.chat.tool.ToolCall",
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "org.noear.solon.ai.chat.tool.ToolResult",
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true
   }
 ]

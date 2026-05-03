@@ -115,7 +115,6 @@ public class Configurator {
 
     @Init
     public void init() {
-
         CliShell cliShell = new CliShell(agentRuntime, agentProps, loopScheduler);
 
         if (AgentFlags.checkUpdate()) {
