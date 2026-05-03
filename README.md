@@ -2,17 +2,17 @@
 <h1>SolonCode</h1>
 <p>An open-source coding agent built with <a href="https://github.com/opensolon/solon-ai">Solon AI</a> and Java (supports Java8 to Java26 runtime environments)</p>
 <p>Latest Version: v2026.5.2</p>
-<img height="260" src="SHOW.png" />
-<img height="260" src="SHOW2.png" />
+<img height="260" src="docs/SHOW.png" />
+<img height="260" src="docs/SHOW2.png" />
 </div>
 
 <div align="center">
 
-[中文](README.zh.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [Deutsch](README.de.md) | [Français](README.fr.md) | [Español](README.es.md) | [Italiano](README.it.md)
+[中文](docs/README.zh.md) | [日本語](docs/README.ja.md) | [한국어](docs/README.ko.md) | [Deutsch](docs/README.de.md) | [Français](docs/README.fr.md) | [Español](docs/README.es.md) | [Italiano](docs/README.it.md)
 
-[Русский](README.ru.md) | [العربية](README.ar.md) | [Português (BR)](README.br.md) | [ไทย](README.th.md) | [Tiếng Việt](README.vi.md) | [Polski](README.pl.md)
+[Русский](docs/README.ru.md) | [العربية](docs/README.ar.md) | [Português (BR)](docs/README.br.md) | [ไทย](docs/README.th.md) | [Tiếng Việt](docs/README.vi.md) | [Polski](docs/README.pl.md)
 
-[বাংলা](README.bn.md) | [Bosanski](README.bs.md) | [Dansk](README.da.md) | [Ελληνικά](README.gr.md) | [Norsk](README.no.md) | [Türkçe](README.tr.md) | [Українська](README.uk.md)
+[বাংলা](docs/README.bn.md) | [Bosanski](docs/README.bs.md) | [Dansk](docs/README.da.md) | [Ελληνικά](docs/README.gr.md) | [Norsk](docs/README.no.md) | [Türkçe](docs/README.tr.md) | [Українська](docs/README.uk.md)
 
 </div>
 
