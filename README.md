@@ -17,6 +17,21 @@
 </div>
 
 
+## About This Fork
+
+This fork tracks the upstream [OpenSolon/SolonCode](https://github.com/opensolon/soloncode) project while experimenting with a build and runtime direction focused on Gradle and GraalVM Native Image.
+
+Main differences from upstream:
+
+* **Gradle-first build**: migrated the JVM modules and extension demo from Maven to Gradle 9.4, with JVM 25 as the compile-time and runtime target.
+* **GraalVM Native Image support**: added native-image build wiring and reflection/resource metadata.
+* **Release packaging and CI**: added GitHub Actions for multi-platform CLI native builds, JAR builds, and release archives.
+* **Static Web UI packaging**: moved the Web UI to static resources and removed the Thymeleaf runtime dependency from the CLI module.
+* **Extension support removed**: removed the `solon.extend` user extension loading path.
+* **Documentation layout**: keeps the main English README at the repository root and stores localized READMEs and screenshots under `docs/`.
+
+PRs and Issues are accepted, but this fork does not guarantee fixes or commit to ongoing maintenance.
+
 ## Installation and Configuration
 
 Installation:

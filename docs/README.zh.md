@@ -16,6 +16,21 @@
 
 </div>
 
+## 关于此 Fork
+
+此 fork 跟踪上游 [OpenSolon/SolonCode](https://github.com/opensolon/soloncode)，同时探索以 Gradle 与 GraalVM Native Image 为核心的构建和运行时方向。
+
+与上游的主要区别：
+
+* **Gradle 优先的构建体系**：将 JVM 子模块和示例扩展从 Maven 迁移到 Gradle 9.4，以 JVM 25 作为编译、运行时目标。
+* **GraalVM Native Image 支持**：补充 native-image 构建配置、反射/资源元数据。
+* **发布包与 CI 自动化**：新增 GitHub Actions，用于多平台 CLI 原生构建、JAR 构建、发布归档。
+* **静态 Web UI 打包**：将 Web UI 改为静态资源，移除 CLI 模块对 Thymeleaf 运行时的依赖。
+* **移除 Extension 支持**：移除 `solon.extend` 用户扩展加载路径。
+* **文档布局调整**：英文主 README 放回仓库根目录，多语言 README 与截图统一放在 `docs/` 下。
+
+我们接受 PR 和 Issues。但此 fork 不保证修复、不承诺持续维护。
+
 ## 安装与配置
 
 安装：
