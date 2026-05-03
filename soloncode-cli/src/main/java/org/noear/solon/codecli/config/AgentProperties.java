@@ -56,6 +56,8 @@ public class AgentProperties extends HarnessProperties {
 
     private boolean memoryIsolation = true;
 
+    private boolean checkUpdate = true;
+
     private String webEndpoint = "/cli";
 
     private String acpTransport = "stdio";

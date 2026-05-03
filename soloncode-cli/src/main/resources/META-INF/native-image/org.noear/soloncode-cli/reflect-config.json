@@ -40,6 +40,32 @@
     "queryAllPublicConstructors": true
   },
   {
+    "name": "org.noear.solon.ai.skills.cli.TerminalSkill",
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true,
+    "queryAllPublicConstructors": true,
+    "queryAllDeclaredMethods": true
+  },
+  {
+    "name": "org.noear.solon.ai.skills.cli.TerminalSkillProxy",
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true,
+    "queryAllPublicConstructors": true,
+    "queryAllDeclaredMethods": true
+  },
+  {
+    "name": "org.noear.solon.ai.skills.cli.TerminalSkill$EditOp",
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true,
+    "queryAllPublicConstructors": true
+  },
+  {
     "name": "org.noear.solon.ai.harness.agent.AgentDefinition",
     "allDeclaredConstructors": true,
     "allDeclaredFields": true,

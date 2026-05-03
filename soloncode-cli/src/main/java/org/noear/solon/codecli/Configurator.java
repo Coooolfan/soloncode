@@ -117,7 +117,7 @@ public class Configurator {
     public void init() {
         CliShell cliShell = new CliShell(agentRuntime, agentProps, loopScheduler);
 
-        if (AgentFlags.checkUpdate()) {
+        if (agentProps.isCheckUpdate() && AgentFlags.checkUpdate()) {
             // 使用颜色代码让提示更醒目
             System.out.println("\033[33mDiscover the new version: " + AgentFlags.getLastVersion() + "\033[0m");
 
