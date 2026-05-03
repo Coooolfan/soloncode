@@ -8,6 +8,7 @@ import org.noear.solon.Solon;
 import org.noear.solon.ai.agent.AgentSession;
 import org.noear.solon.ai.agent.AgentSessionProvider;
 import org.noear.solon.ai.agent.session.FileAgentSession;
+import org.noear.solon.ai.chat.ChatConfig;
 import org.noear.solon.ai.harness.HarnessEngine;
 import org.noear.solon.ai.harness.HarnessExtension;
 import org.noear.solon.ai.skills.memory.MemorySkill;
@@ -42,6 +43,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Configuration
 public class Configurator {
     private static final Logger LOG = LoggerFactory.getLogger(Configurator.class);
+    private static final String SOLON_AOT_PROCESSING = "solon.aot.processing";
 
     @Inject
     HarnessEngine agentRuntime;
@@ -94,6 +96,8 @@ public class Configurator {
             }
         });
 
+        ensureAotModel(props);
+
         HarnessEngine engine = HarnessEngine.of(props)
                 .sessionProvider(sessionProvider)
                 .build();
@@ -115,6 +119,10 @@ public class Configurator {
 
     @Init
     public void init() {
+        if (isAotProcessing()) {
+            return;
+        }
+
         CliShell cliShell = new CliShell(agentRuntime, agentProps, loopScheduler);
 
         if (agentProps.isCheckUpdate() && AgentFlags.checkUpdate()) {
@@ -165,6 +173,24 @@ public class Configurator {
 
         //cli - default
         new Thread(cliShell, "CLI-Interactive-Thread").start();
+    }
+
+    private static void ensureAotModel(AgentProperties props) {
+        if (isAotProcessing() == false || props.getModels().isEmpty() == false) {
+            return;
+        }
+
+        ChatConfig config = new ChatConfig();
+        config.setName("aot-placeholder");
+        config.setProvider("openai");
+        config.setApiUrl("http://127.0.0.1/v1/chat/completions");
+        config.setApiKey("aot-placeholder");
+        config.setModel("aot-placeholder");
+        props.addModel(config);
+    }
+
+    private static boolean isAotProcessing() {
+        return Boolean.getBoolean(SOLON_AOT_PROCESSING);
     }
 
 
