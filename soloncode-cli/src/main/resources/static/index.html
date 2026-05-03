@@ -316,6 +316,7 @@
         .cmd-complete-item { padding: 10px 14px; cursor: pointer; font-size: 13px; transition: background 0.15s; display: flex; align-items: flex-start; gap: 10px; }
         .cmd-complete-item:hover, .cmd-complete-item.active { background: var(--bg-hover); }
         .cmd-complete-item .cmd-name { font-weight: 600; color: var(--accent); white-space: nowrap; font-family: var(--font-mono); font-size: 13px; }
+        .cmd-complete-item .cmd-name.subagent { color: #8b5cf6; }
         .cmd-complete-item .cmd-desc { color: var(--text-secondary); font-size: 12px; line-height: 1.4; }
         .cmd-complete-item .cmd-args { color: var(--text-secondary); font-size: 11px; font-family: var(--font-mono); white-space: nowrap; flex-shrink: 0; margin-top: 1px; }
         .cmd-complete::-webkit-scrollbar { width: 4px; }
@@ -362,7 +363,7 @@
                 <div class="attachments-wrap" id="welcomeAttachmentsWrap"></div>
                 <div style="position:relative">
                     <div class="cmd-complete" id="welcomeCmdComplete"></div>
-                    <textarea id="welcomeInput" placeholder="..." rows="1" autofocus style="width: 100%;"></textarea>
+                    <textarea id="welcomeInput" placeholder="随便问..." rows="1" autofocus style="width: 100%;"></textarea>
                 </div>
                 <div class="welcome-toolbar">
                     <div class="toolbar-left">
@@ -381,6 +382,12 @@
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
                         </button>
                         <input type="file" class="attach-input" id="welcomeImageInput" multiple accept="image/*"/>
+                        <button class="attach-btn" id="welcomeCmdBtn" title="斜杠命令">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20L16 4"/><circle cx="8" cy="12" r="2"/><circle cx="16" cy="12" r="2"/></svg>
+                        </button>
+                        <button class="attach-btn" id="welcomeAgentBtn" title="子代理">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><line x1="19" y1="2" x2="19" y2="6"/><line x1="17" y1="4" x2="21" y2="4"/></svg>
+                        </button>
                     </div>
                     <div class="toolbar-right">
                         <button class="voice-btn hidden" id="welcomeVoiceBtn" title="语音输入">
@@ -404,7 +411,7 @@
                     <div class="attachments-wrap" id="chatAttachmentsWrap"></div>
                     <div style="position:relative;">
                         <div class="cmd-complete" id="chatCmdComplete"></div>
-                        <textarea id="chatInput" placeholder="请输入消息..." rows="1" style="width:100%"></textarea>
+                        <textarea id="chatInput" placeholder="随便问..." rows="1" style="width:100%"></textarea>
                     </div>
                     <div class="input-toolbar">
                         <div class="toolbar-left">
@@ -415,6 +422,12 @@
                                 </div>
                                 <div class="model-dropdown" id="chatModelDropdown"></div>
                             </div>
+                            <button class="attach-btn" id="chatCmdBtn" title="斜杠命令">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20L16 4"/><circle cx="8" cy="12" r="2"/><circle cx="16" cy="12" r="2"/></svg>
+                            </button>
+                            <button class="attach-btn" id="chatAgentBtn" title="子代理">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><line x1="19" y1="2" x2="19" y2="6"/><line x1="17" y1="4" x2="21" y2="4"/></svg>
+                            </button>
                             <button class="attach-btn" id="chatAttachBtn" title="添加文件附件">
                                 <svg viewBox="0 0 24 24"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
                             </button>
@@ -679,6 +692,25 @@
             if (e.target.files && e.target.files.length > 0) processSelectedFiles(e.target.files, 'file');
             e.target.value = '';
         });
+        // Command & Agent button handlers
+        function triggerCmdComplete(inputEl, completeEl, prefix) {
+            inputEl.value = prefix;
+            inputEl.focus();
+            showCmdComplete(inputEl, completeEl, prefix);
+        }
+        document.getElementById('welcomeCmdBtn').addEventListener('click', function() {
+            triggerCmdComplete(welcomeInput, welcomeCmdComplete, '/');
+        });
+        document.getElementById('chatCmdBtn').addEventListener('click', function() {
+            triggerCmdComplete(chatInput, chatCmdComplete, '/');
+        });
+        document.getElementById('welcomeAgentBtn').addEventListener('click', function() {
+            triggerCmdComplete(welcomeInput, welcomeCmdComplete, '@');
+        });
+        document.getElementById('chatAgentBtn').addEventListener('click', function() {
+            triggerCmdComplete(chatInput, chatCmdComplete, '@');
+        });
+
         // Image button handlers
         document.getElementById('welcomeImageBtn').addEventListener('click', function(e) {
             e.stopPropagation();
@@ -1137,8 +1169,9 @@
         initVoice();
 
         /* ===== Command System ===== */
-        var commandList = []; // [{name, description}, ...]
+        var commandList = []; // [{name, description, type}, ...]
         var commandsLoaded = false;
+        var cmdTrigger = null; // '/' for commands, '@' for subagents
 
         function loadCommands() {
             var xhr = new XMLHttpRequest();
@@ -1169,16 +1202,21 @@
         function showCmdComplete(inputEl, completeEl, prefix) {
             if (!commandsLoaded || commandList.length === 0) return;
 
-            var query = prefix.substring(1).toLowerCase(); // remove '/'
+            var trigger = prefix.charAt(0);
+            var query = prefix.substring(1).toLowerCase();
+            var filterType = (trigger === '@') ? 'subagent' : 'command';
             cmdVisibleItems = [];
             var html = '';
 
             for (var i = 0; i < commandList.length; i++) {
                 var cmd = commandList[i];
-                if (cmd.name.indexOf(query) === 0 || query.length === 0) {
+                // Filter by type based on trigger
+                if (cmd.type !== filterType) continue;
+                if (cmd.name.toLowerCase().indexOf(query) === 0 || query.length === 0) {
                     cmdVisibleItems.push(cmd);
+                    var nameClass = (trigger === '@') ? 'cmd-name subagent' : 'cmd-name';
                     html += '<div class="cmd-complete-item" data-index="' + (cmdVisibleItems.length - 1) + '">'
-                        + '<span class="cmd-name">/' + escapeHtml(cmd.name) + '</span>'
+                        + '<span class="' + nameClass + '">' + escapeHtml(trigger + cmd.name) + '</span>'
                         + '<span class="cmd-desc">' + escapeHtml(cmd.description || '') + '</span>'
                         + '</div>';
                 }
@@ -1189,6 +1227,7 @@
                 return;
             }
 
+            cmdTrigger = trigger;
             cmdActiveIndex = -1;
             completeEl.innerHTML = html;
             completeEl.classList.add('show');
@@ -1199,15 +1238,17 @@
             chatCmdComplete.classList.remove('show');
             cmdActiveIndex = -1;
             cmdVisibleItems = [];
+            cmdTrigger = null;
         }
 
         function applyCmdSelection(inputEl, completeEl) {
             if (cmdActiveIndex >= 0 && cmdActiveIndex < cmdVisibleItems.length) {
                 var cmd = cmdVisibleItems[cmdActiveIndex];
+                var trigger = cmdTrigger || '/';
                 var parts = inputEl.value.trim().split(/\s+/);
                 // Keep existing args after command name
                 var argsStr = parts.length > 1 ? parts.slice(1).join(' ') : '';
-                inputEl.value = '/' + cmd.name + (argsStr ? ' ' + argsStr : '');
+                inputEl.value = trigger + cmd.name + (argsStr ? ' ' + argsStr : ' ');
                 autoResize(inputEl);
             }
             hideCmdComplete();
@@ -1258,8 +1299,8 @@
             var completeEl = (inputEl === welcomeInput) ? welcomeCmdComplete : chatCmdComplete;
             var val = inputEl.value;
 
-            if (val.indexOf('/') === 0) {
-                // Only show completion when cursor is at the command name part (no spaces yet or just after /)
+            if (val.indexOf('/') === 0 || val.indexOf('@') === 0) {
+                // Only show completion when cursor is at the command/agent name part (no spaces yet)
                 var cursorPos = inputEl.selectionStart;
                 var textBeforeCursor = val.substring(0, cursorPos);
                 var spaceIndex = textBeforeCursor.indexOf(' ');
@@ -1312,7 +1353,7 @@
 
         // Hide on outside click
         document.addEventListener('click', function(e) {
-            if (!e.target.closest('.cmd-complete') && !e.target.closest('textarea')) {
+            if (!e.target.closest('.cmd-complete') && !e.target.closest('textarea') && !e.target.closest('#welcomeCmdBtn') && !e.target.closest('#welcomeAgentBtn') && !e.target.closest('#chatCmdBtn') && !e.target.closest('#chatAgentBtn')) {
                 hideCmdComplete();
             }
         });
