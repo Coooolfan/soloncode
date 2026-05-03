@@ -175,5 +175,26 @@
     "allDeclaredConstructors": true,
     "allDeclaredFields": true,
     "allDeclaredMethods": true
+  },
+  {
+    "name": "org.noear.solon.codecli.portal.WebController",
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true,
+    "queryAllPublicMethods": true,
+    "queryAllDeclaredMethods": true
+  },
+  {
+    "name": "org.noear.solon.codecli.portal.WsGate",
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "org.noear.solon.codecli.portal.AcpLink",
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true
   }
 ]
