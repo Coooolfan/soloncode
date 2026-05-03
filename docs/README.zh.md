@@ -1,7 +1,7 @@
 <div align="center">
 <h1>SolonCode</h1>
 <p>基于 <a href="https://github.com/opensolon/solon-ai">Solon AI</a> 与 Java 实现的开源编码智能体（支持 Java8 到 Java26 环境启动）</p>
-<p>最新版本：v2026.5.3</p>
+<p>最新版本：0.1.0-native</p>
 <img height="260" src="SHOW.png" />
 <img height="260" src="SHOW2.png" />
 </div>
@@ -27,6 +27,7 @@
 * **发布包与 CI 自动化**：新增 GitHub Actions，用于多平台 CLI 原生构建、JAR 构建、发布归档。
 * **静态 Web UI 打包**：将 Web UI 改为静态资源，移除 CLI 模块对 Thymeleaf 运行时的依赖。
 * **移除 Extension 支持**：移除 `solon.extend` 用户扩展加载路径。
+* **Fork 独立版本线**：使用独立的 `0.1.0-native` 版本号，并禁用上游更新检查。
 * **文档布局调整**：英文主 README 放回仓库根目录，多语言 README 与截图统一放在 `docs/` 下。
 
 我们接受 PR 和 Issues。但此 fork 不保证修复、不承诺持续维护。
@@ -55,7 +56,7 @@ irm https://solon.noear.org/soloncode/setup.ps1 | iex
 
 ```bash
 demo@MacBook-Pro ~ % soloncode
-SolonCode v2026.5.3
+SolonCode 0.1.0-native
 /Users/noear
 Tips: (esc) interrupt | /(tab) ls command | @(tab) ls agent
 
