@@ -1,7 +1,7 @@
 <div align="center">
 <h1>SolonCode</h1>
 <p>Un agente de codificación de código abierto construido con <a href="https://github.com/opensolon/solon-ai">Solon AI</a> y Java (compatible con entornos de ejecución Java8 a Java26)</p>
-<p>Última versión: v2026.5.3</p>
+<p>Última versión: v2026.6.16</p>
 <img height="260" src="SHOW.png" />
 <img height="260" src="SHOW2.png" />
 </div>
@@ -21,7 +21,7 @@
 Instalación:
 
 ```bash
-# Mac / Linux:
+# Mac / Linux / Harmony PC:
 curl -fsSL https://solon.noear.org/soloncode/setup.sh | bash
 
 # Windows (PowerShell):
@@ -36,16 +36,28 @@ Configuración (debe modificarse después de la instalación):
 
 ## Ejecución
 
-Ejecute el comando `soloncode` desde cualquier directorio en la consola (es decir, su espacio de trabajo).
+Ejecute el comando `soloncode` (CLI interactivo) o `soloncode web 0` (Web interactivo) desde cualquier directorio en la consola (es decir, su espacio de trabajo).
+
+* `soloncode` (CLI interactivo)
 
 ```bash
 demo@MacBook-Pro ~ % soloncode
-SolonCode v2026.5.3
-/Users/noear
+SolonCode v2026.6.16 PID-74080 Model:deepseek-v4-flash
+/path/demo
 Tips: (esc) interrupt | /(tab) ls command | @(tab) ls agent
 
 User
 > 
+```
+
+* `soloncode web 0` (Web interactivo)
+
+```bash
+demo@MacBook-Pro ~ % soloncode web 0
+SolonCode v2026.6.16 PID-73617 Model:deepseek-v4-flash
+/path/demo
+2026-05-20 09:35
+Web interface: http://localhost:50488/
 ```
 
 Prueba de funcionalidades (intente las siguientes tareas, de simple a compleja):
@@ -67,12 +79,12 @@ Si está interesado en contribuir con código, lea la [Documentación de contrib
 
 Si utiliza "soloncode" en el nombre de su proyecto (por ejemplo, "soloncode-dashboard" o "soloncode-app"), indique en el README que el proyecto no está desarrollado oficialmente por el equipo de OpenSolon y no tiene afiliación.
 
-## Preguntas frecuentes: ¿Cuál es la diferencia con Claude Code y OpenCode?
+## Preguntas frecuentes: ¿Cuál es la diferencia con Claude Code?
 
 Son funcionalmente similares, con las siguientes diferencias clave:
 
-* Desarrollado con Java, 100% de código abierto.
+* Desarrollado con Java, 100% de código abierto. Compatible con BiSheng JDK (Huawei) y Harmony PC.
 * Completamente impulsado y construido con prompts en chino
-* Agnóstico del proveedor. Requiere configuración del modelo. La iteración de modelos reducirá brechas y costos, haciendo importante el enfoque agnóstico del proveedor.
-* Enfocado en la interfaz de línea de comandos (CLI) del terminal, ejecutándose mediante comandos del sistema.
+* Agnóstico del proveedor. Configurar modelos según sea necesario. La iteración de modelos reducirá brechas y costos, haciendo importante la configuración flexible.
+* Soporta simultáneamente la interfaz de línea de comandos (CLI), la interfaz del navegador (WEB) y la interfaz IDE de escritorio (Desktop).
 * Compatible con Web, protocolo ACP para comunicación remota.

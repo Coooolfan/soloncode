@@ -1,7 +1,7 @@
 <div align="center">
 <h1>SolonCode</h1>
 <p>SolonCode là một tác nhân mã hóa mã nguồn mở được xây dựng dựa trên <a href="https://github.com/opensolon/solon-ai">Solon AI</a> và Java, hỗ trợ môi trường từ Java8 đến Java26.</p>
-<p>Phiên bản mới nhất: v2026.5.3</p>
+<p>Phiên bản mới nhất: v2026.6.16</p>
 <img height="260" src="SHOW.png" />
 <img height="260" src="SHOW2.png" />
 </div>
@@ -21,7 +21,7 @@
 Cài đặt:
 
 ```bash
-# Mac / Linux:
+# Mac / Linux / Harmony PC:
 curl -fsSL https://solon.noear.org/soloncode/setup.sh | bash
 
 # Windows (PowerShell):
@@ -36,16 +36,28 @@ Cấu hình (bắt buộc phải sửa sau khi cài đặt):
 
 ## Chạy
 
-Chạy lệnh `soloncode` từ bất kỳ thư mục nào trong bảng điều khiển (tức là không gian làm việc của bạn).
+Chạy lệnh `soloncode` (CLI tương tác) hoặc `soloncode web 0` (Web tương tác) từ bất kỳ thư mục nào trong bảng điều khiển (tức là không gian làm việc của bạn).
+
+* `soloncode` (CLI tương tác)
 
 ```bash
 demo@MacBook-Pro ~ % soloncode
-SolonCode v2026.5.3
-/Users/noear
+SolonCode v2026.6.16 PID-74080 Model:deepseek-v4-flash
+/path/demo
 Tips: (esc) interrupt | /(tab) ls command | @(tab) ls agent
 
 User
 > 
+```
+
+* `soloncode web 0` (Web tương tác)
+
+```bash
+demo@MacBook-Pro ~ % soloncode web 0
+SolonCode v2026.6.16 PID-73617 Model:deepseek-v4-flash
+/path/demo
+2026-05-20 09:35
+Web interface: http://localhost:50488/
 ```
 
 Kiểm tra Tính năng (thử các tác vụ sau, từ đơn giản đến phức tạp):
@@ -67,12 +79,12 @@ Nếu bạn quan tâm đến việc đóng góp mã, vui lòng đọc [Tài li�
 
 Nếu bạn sử dụng "soloncode" trong tên dự án của mình (ví dụ: "soloncode-dashboard" hoặc "soloncode-app"), vui lòng ghi chú trong README rằng dự án không được phát triển chính thức bởi đội ngũ OpenSolon và không có sự liên kết.
 
-## Câu hỏi thường gặp: Sự khác biệt với Claude Code và OpenCode là gì?
+## Câu hỏi thường gặp: Sự khác biệt với Claude Code là gì?
 
 Về mặt chức năng, chúng tương tự nhau, với các điểm khác biệt chính:
 
-* Được xây dựng bằng Java, 100% mã nguồn mở.
+* Được xây dựng bằng Java, 100% mã nguồn mở. Tương thích với BiSheng JDK (Huawei) và Harmony PC.
 * Hoàn toàn được điều khiển và xây dựng bằng prompt tiếng Trung
-* Không phụ thuộc vào nhà cung cấp. Yêu cầu cấu hình mô hình. Việc lặp lại mô hình sẽ thu hẹp khoảng cách và giảm chi phí, khiến phương pháp không phụ thuộc nhà cung cấp trở nên quan trọng.
-* Tập trung vào giao diện dòng lệnh terminal (CLI), chạy thông qua lệnh hệ thống.
+* Không phụ thuộc vào nhà cung cấp. Cấu hình mô hình theo nhu cầu. Việc lặp lại mô hình sẽ thu hẹp khoảng cách và giảm chi phí, khiến cấu hình linh hoạt trở nên quan trọng.
+* Hỗ trợ đồng thời giao diện dòng lệnh terminal (CLI), giao diện trình duyệt (WEB) và giao diện IDE máy tính để bàn (Desktop).
 * Hỗ trợ Web, giao thức ACP để giao tiếp từ xa.

@@ -16,7 +16,7 @@ dependencies {
 
     implementation(libs.solon.ai.harness)
     implementation(libs.solon.ai.acp)
-    implementation(libs.solon.ai.skill.memory)
+    implementation(libs.solon.ai.talent.memory)
     implementation(libs.solon.scheduling.simple)
     implementation(libs.solon.server.smarthttp)
     implementation(libs.solon.web.staticfiles)
@@ -24,6 +24,7 @@ dependencies {
     implementation(libs.solon.web.cors)
     implementation(libs.solon.logging.logback)
     implementation(libs.solon.aot)
+    implementation(libs.java.websocket.ns)
 
     implementation(libs.jline) {
         exclude(group = "org.fusesource.jansi", module = "jansi")

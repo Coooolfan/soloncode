@@ -1,164 +1,110 @@
 package org.noear.solon.codecli.config;
 
 import lombok.Getter;
-import lombok.Setter;
 
-import org.noear.solon.ai.chat.ChatConfig;
-import org.noear.solon.ai.harness.HarnessProperties;
-import org.noear.solon.core.util.IoUtil;
-import org.noear.solon.core.util.ResourceUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.noear.solon.ai.harness.HarnessExtension;
+import org.noear.solon.codecli.config.entity.ApiSourceDo;
+import org.noear.solon.codecli.config.entity.LspServerDo;
+import org.noear.solon.codecli.config.entity.McpServerDo;
+import org.noear.solon.codecli.config.entity.ModelDo;
 
-import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
- * 代理属性
+ * 代理属性（相关配置从 config.yml, AgentProperties - 慢慢过度到 settings.json, AgentSettings）
  *
  * @author noear
  * @since 3.9.1
  */
 @Getter
-@Setter
-public class AgentProperties extends HarnessProperties {
-    private static final Logger LOG = LoggerFactory.getLogger(AgentProperties.class);
-
-    public final static String NAME_CONFIG_YML = "config.yml";
-    public final static String NAME_AGENTS_MD = "AGENTS.md";
-
+public class AgentProperties implements Serializable {
     /**
      * @deprecated 2026.4.10 {@link #getModels()}
-     *
      */
     @Deprecated
-    private ChatConfig chatModel;
+    private ModelDo chatModel;
 
-    public final static String OPENCODE_SKILLS = ".opencode/skills/";
-    public final static String CLAUDE_SKILLS = ".claude/skills/";
+    //主代理工具权限
+    private List<String> tools = new ArrayList<>();
 
-    public final static String X_SESSION_ID = "X-Session-Id";
-    public final static String X_SESSION_CWD = "X-Session-Cwd";
+    // 禁用工具（全局）
+    private List<String> disallowedTools = new ArrayList<>();
 
-    public final static String ARG_SESSION = "session";
+    //最大步数
+    @Deprecated
+    private Integer maxSteps;
+    private Integer maxTurns;
 
+    //自我反思
+    private boolean autoRethink = true;
 
-    private String sessionId = "default"; //默认会话
+    private int sessionWindowSize = 8;
 
-    private boolean thinkPrinted = false;
-
-    private boolean cliPrintSimplified = true;
+    private int summaryWindowSize = 40;
+    private int summaryWindowToken = 60_000;
+    private String summaryModel;
 
     private boolean memoryIsolation = true;
+    private boolean memoryEnabled = true;
+
+    private boolean sandboxMode = true;
+    private boolean sandboxAllowUserHome = true;
+    private boolean sandboxSystemRestrict = true;
 
     private boolean checkUpdate = true;
-
     private String webEndpoint = "/cli";
 
-    private String acpTransport = "stdio";
-    private String acpEndpoint = "/acp";
+    private boolean hitlEnabled = false;
+    private boolean subagentEnabled = true;
+    private boolean bashAsyncEnabled = false;
 
-    private String wsEndpoint = "/ws";
+    private boolean mcpEnabled = true;
+    private boolean openApiEnabled = true;
+    private boolean lspEnabled = true;
 
-    private String startupSessionMode = "resume";
-    private String uiType = "old";
-    private String uiTheme = "solon";
-    private Map<String, Map<String, String>> uiThemes;
+    private String userAgent = "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; SolonCode/1.0 like claude-code; +https://solon.noear.org/)";
+    private String defaultModel;
 
-    public AgentProperties() {
-        super(".soloncode/");
-    }
+    private int apiRetries = 3;
+    private int mcpRetries = 3;
+    private int modelRetries = 3;
 
-    /**
-     * 当前目录
-     */
-    public static String getUserDir() {
-        return System.getProperty("user.dir");
-    }
+    private List<HarnessExtension> extensions = new ArrayList<>();
+
+    private List<ModelDo> models = new ArrayList<>();
 
     /**
-     * 用户主目录
+     * @deprecated 4.0.0
      */
-    public static String getUserHome() {
-        return System.getProperty("user.home");
+    @Deprecated
+    private Map<String, String> skillPools = new LinkedHashMap<>();
+
+    /**
+     * @deprecated 4.0.0
+     */
+    @Deprecated
+    private List<String> agentPools = new ArrayList<>();
+
+    private Map<String, McpServerDo> mcpServers = new LinkedHashMap<>();
+    private Map<String, ApiSourceDo> apiServers = new LinkedHashMap<>();
+    private Map<String, LspServerDo> lspServers = new LinkedHashMap<>();
+
+    private boolean thinkPrinted = false;
+    private boolean cliPrintSimplified = true;
+
+    public boolean isAutoRethink() {
+        return autoRethink;
     }
 
-    public URL getConfigUrl() throws MalformedURLException {
-        //1. 资源文件（一般开发时）
-        URL tmp = ResourceUtil.getResource(NAME_CONFIG_YML);
-        if (tmp != null) {
-            return tmp;
+    public Integer getMaxTurns() {
+        if (maxTurns == null) {
+            return maxSteps;
+        } else {
+            return maxTurns;
         }
-
-        //2. 工作区配置
-        Path path = Paths.get(getUserDir(), getHarnessHome(), NAME_CONFIG_YML);
-        if (Files.exists(path)) {
-            return path.toUri().toURL();
-        }
-
-        //3. 用户目录区配置
-        path = Paths.get(getUserHome(), getHarnessHome(), NAME_CONFIG_YML);
-
-        if (Files.exists(path)) {
-            return path.toUri().toURL();
-        }
-
-        //4. 程序边上的配置文件
-        tmp = ResourceUtil.getResourceByFile(NAME_CONFIG_YML);
-        if (tmp != null) {
-            return tmp;
-        }
-
-        return null;
-    }
-
-    public URL getAgentsUrl() throws MalformedURLException {
-        //1. 工作区配置
-        Path path = Paths.get(getWorkspace(), getHarnessHome(), NAME_AGENTS_MD);
-        if (Files.exists(path)) {
-            return path.toUri().toURL();
-        }
-
-        //2. 用户目录区配置
-        path = Paths.get(getUserHome(), getHarnessHome(), NAME_AGENTS_MD);
-
-        if (Files.exists(path)) {
-            return path.toUri().toURL();
-        }
-
-        //3. 程序边上的配置文件
-        URL tmp = ResourceUtil.getResourceByFile(NAME_AGENTS_MD);
-        if (tmp != null) {
-            return tmp;
-        }
-
-        return null;
-    }
-
-    public String getAgentsMd() {
-        try {
-            URL agentsUrl = getAgentsUrl();
-
-            if (agentsUrl != null) {
-                try (InputStream is = agentsUrl.openStream()) {
-                    String content = IoUtil.transferToString(is, "utf-8").trim();
-
-                    if (content.length() > 10000) { // 例如限制在 1万字符以内
-                        LOG.warn("AGENTS.md is too large, truncating...");
-                        return content.substring(0, 10000);
-                    }
-                    return content;
-                }
-            }
-        } catch (Throwable e) {
-            LOG.warn("AGENTS.md load failure: {}", e.getMessage(), e);
-        }
-
-        return null;
     }
 }

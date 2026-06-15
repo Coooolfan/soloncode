@@ -1,16 +1,21 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { invoke } from '@tauri-apps/api/core';
 import type { Message, Conversation, Theme, Plugin, ContentType, ContentItem } from '../types';
 import type { ModelProvider } from '../services/settingsService';
 import { saveMessage, getMessagesByConversation } from '../db';
 import { ChatHeader } from './ChatHeader';
 import { ChatMessages } from './ChatMessages';
-import { ChatInput, type SendOptions } from './ChatInput';
+import { ChatInput, type SendOptions, type ChatMode } from './ChatInput';
+import { Icon } from './common/Icon';
 import '../views/ChatPage.css';
 
 interface ChatViewProps {
   currentConversation: Conversation;
   plugins?: Plugin[];
   workspacePath?: string;
+  projectName?: string;
+  theme?: Theme;
+  backendPort?: number | null;
   onUpdateSessionTitle?: (sessionId: string, title: string) => void;
   onNewSession?: (title?: string) => string;
   providers?: ModelProvider[];
@@ -18,14 +23,23 @@ interface ChatViewProps {
   onActiveProviderChange?: (providerId: string) => void;
   activeFileName?: string;
   activeFilePath?: string;
+  onNewProject?: () => void;
+  onOpenFolder?: () => void;
+  onFileSelect?: (path: string) => void;
+  initialPrompt?: {
+    prompt: string;
+    type: 'skill' | 'agent';
+    name: string;
+  } | null;
+  onAiCreateComplete?: (info: { type: 'skill' | 'agent'; name: string }) => void;
+  newSessionFromProject?: boolean;
 }
 
-// 全局 WebSocket 连接管理器（单例模式）
+// 全局 WebSocket 连接管理器（每次请求独立连接）
 class WebSocketManager {
   private static instance: WebSocketManager | null = null;
-  private ws: WebSocket | null = null;
-  private messageCallbacks: Map<string, (data: any) => void> = new Map();
-  private connectingSessionId: string | null = null;
+  private activeWs: WebSocket | null = null;
+  private messageCallback: ((data: any) => void) | null = null;
   private backendPort: number | null = null;
   private workspacePath: string | null = null;
 
@@ -51,12 +65,15 @@ class WebSocketManager {
     this.workspacePath = path;
   }
 
-  private getWebSocketUrl(): string {
+  private getWebSocketUrl(sessionId?: string): string {
     const host = this.backendPort
       ? `localhost:${this.backendPort}`
       : (import.meta.env.VITE_WS_HOST || 'localhost:4808');
     const protocol = import.meta.env.VITE_WS_PROTOCOL || 'ws';
     const params = new URLSearchParams();
+    if (sessionId) {
+      params.set('sessionId', sessionId);
+    }
     if (this.workspacePath) {
       params.set('X-Session-Cwd', this.workspacePath);
     }
@@ -64,142 +81,128 @@ class WebSocketManager {
     return `${protocol}://${host}/ws${query ? '?' + query : ''}`;
   }
 
-  connect(): Promise<WebSocket> {
+  /** 每次请求创建独立 WebSocket 连接 */
+  private createConnection(sessionId?: string): Promise<WebSocket> {
     return new Promise((resolve, reject) => {
-      if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-        resolve(this.ws);
-        return;
-      }
-
-      if (this.ws && this.ws.readyState === WebSocket.CONNECTING) {
-        const onOpen = () => {
-          cleanup();
-          resolve(this.ws!);
-        };
-        const onError = (e: Event) => {
-          this.ws?.removeEventListener('open', onOpen);
-          this.ws?.removeEventListener('error', onError);
-          reject(new Error('WebSocket connection failed'));
-        };
-         // 定义清理函数，用于移除监听器
-        const cleanup = () => {
-        this.ws?.removeEventListener('open', onOpen);
-        this.ws?.removeEventListener('error', onError);
-        // 注意：如果是复用实例，这里通常不移除 message/close，
-        // 但为了 Promise 的纯净性，这里假设我们只关心连接建立阶段
-      };
-        this.ws.addEventListener('open', onOpen);
-        this.ws.addEventListener('error', onError);
-        return;
-      }
-
-      const wsUrl = this.getWebSocketUrl();
+      const wsUrl = this.getWebSocketUrl(sessionId);
       console.log('[WS] Connecting to:', wsUrl);
-      this.ws = new WebSocket(wsUrl);
+      const ws = new WebSocket(wsUrl);
 
-      this.ws.onopen = () => {
+      const onOpen = () => {
+        cleanup();
         console.log('[WS] Connected');
-        resolve(this.ws!);
+        resolve(ws);
       };
-
-      this.ws.onerror = (error) => {
-        console.error('[WS] Error:', error);
+      const onError = () => {
+        cleanup();
+        console.error('[WS] Connection error');
         reject(new Error('WebSocket connection failed'));
       };
-
-      this.ws.onclose = (event) => {
-        console.log('[WS] Disconnected, code:', event.code, 'reason:', event.reason, 'wasClean:', event.wasClean);
-        this.ws = null;
+      const onClose = () => {
+        cleanup();
+        reject(new Error('WebSocket closed before connected'));
       };
-
-      this.ws.onmessage = (event) => {
-        this.handleMessage(event.data);
+      const cleanup = () => {
+        ws.removeEventListener('open', onOpen);
+        ws.removeEventListener('error', onError);
+        ws.removeEventListener('close', onClose);
       };
+      ws.addEventListener('open', onOpen);
+      ws.addEventListener('error', onError);
+      ws.addEventListener('close', onClose);
     });
   }
 
-  private handleMessage(data: string) {
-    try {
-      if (data.trim() === '[DONE]') {
-        return;
+  registerCallback(callback: (data: any) => void) {
+    this.messageCallback = callback;
+  }
+
+  unregisterCallback() {
+    this.messageCallback = null;
+  }
+
+  async sendMessage(request: any): Promise<void> {
+    // 先关闭上一次的连接
+    this.closeActive();
+
+    const sessionId = request.sessionId;
+    const ws = await this.createConnection(sessionId);
+    this.activeWs = ws;
+
+    ws.onmessage = (event) => {
+      try {
+        const data = event.data;
+        if (data.trim() === '[DONE]') {
+          ws.close();
+          return;
+        }
+        const msg = JSON.parse(data);
+        this.messageCallback?.(msg);
+      } catch (e) {
+        console.warn('[WS] Failed to parse message:', event.data, e);
       }
+    };
 
-      const msg = JSON.parse(data);
-      const sessionId = msg.sessionId;
-
-      // 按优先级查找回调：精确匹配 → connectingSessionId → 任意一个
-      let callback = (sessionId && this.messageCallbacks.get(sessionId))
-        || (this.connectingSessionId && this.messageCallbacks.get(this.connectingSessionId))
-        || this.messageCallbacks.values().next().value
-        || null;
-
-      if (callback) {
-        callback(msg);
+    ws.onclose = () => {
+      if (this.activeWs === ws) {
+        this.activeWs = null;
       }
-    } catch (e) {
-      console.warn('[WS] Failed to parse message:', data, e);
-    }
-  }
+    };
 
-  registerCallback(sessionId: string, callback: (data: any) => void) {
-    this.messageCallbacks.set(sessionId, callback);
-  }
-
-  unregisterCallback(sessionId: string) {
-    this.messageCallbacks.delete(sessionId);
-    if (this.connectingSessionId === sessionId) {
-      this.connectingSessionId = null;
-    }
-  }
-
-  async sendMessage(sessionId: string, request: any): Promise<void> {
-    this.connectingSessionId = sessionId;
-    const ws = await this.connect();
+    // sessionId 已通过 URL 参数传递，从 body 中移除
+    delete request.sessionId;
     ws.send(JSON.stringify(request));
   }
 
-  /** 取消当前请求：关闭连接，保留回调注册以便重新连接 */
+  /** 取消当前请求：关闭连接 */
   cancel() {
-    if (this.ws) {
-      this.ws.close();
-      this.ws = null;
-    }
-    this.connectingSessionId = null;
+    this.closeActive();
   }
 
   disconnect() {
-    this.closeConnection();
-    this.messageCallbacks.clear();
+    this.closeActive();
+    this.messageCallback = null;
   }
 
-  /** 推送配置变更到后端 */
+  /** 推送配置变更到后端（HTTP POST 代替短连接 WS） */
   async sendConfig(chatModel: { apiUrl?: string; apiKey?: string; model?: string }): Promise<void> {
-    const ws = await this.connect();
-    ws.send(JSON.stringify({
-      type: 'config',
-      chatModel,
-    }));
+    const port = this.backendPort || 4808;
+    try {
+      await fetch(`http://localhost:${port}/chat/config`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'config', chatModel }),
+      });
+    } catch {
+      // fallback: 短连接 WS
+      const ws = await this.createConnection();
+      ws.send(JSON.stringify({ type: 'config', chatModel }));
+      ws.close();
+    }
   }
 
-  /** 只关闭连接，保留回调注册（端口/路径变化时使用） */
-  closeConnection() {
-    if (this.ws) {
-      this.ws.close();
-      this.ws = null;
+  private closeActive() {
+    if (this.activeWs) {
+      this.activeWs.close();
+      this.activeWs = null;
     }
+  }
+
+  closeConnection() {
+    this.closeActive();
   }
 }
 
-// 过滤空标签的辅助函数
+// 过滤空标签和 trace 信息的辅助函数
 function filterEmptyTags(text: string): string {
   let result = text;
   // 过滤空的 HTML/XML 标签（包括带属性的）
   result = result.replace(/<([a-zA-Z][a-zA-Z0-9]*)([^>]*)><\/\1>/g, '');
   result = result.replace(/<([a-zA-Z][a-zA-Z0-9]*)([^>]*)\/>/g, '');
-  // 过滤只有空白内容（包括空格、换行、回车）的标签
-  result = result.replace(/<([a-zA-Z][a-zA-Z0-9]*)([^>]*)>[\s\n\r]*<\/\1>/g, '');
   // 过滤连续的空行（超过2个换行符）
   result = result.replace(/\n{3,}/g, '\n\n');
+  // 过滤末尾的模型 trace 信息，如 `(glm-4.7, 6985tk, 4s)` 或 `(gpt-4o, 1s)`
+  result = result.replace(/\s*`\?\(?[\w.\-]+(?:,\s*\d+\.?\d*\w+)*\)\s*`?$/gm, '');
   return result;
 }
 
@@ -253,28 +256,66 @@ export async function sendModelConfig(provider: { apiUrl: string; apiKey: string
   await registerModelToBackend(provider, true);
 }
 
-export function ChatView({ currentConversation, plugins, workspacePath, onUpdateSessionTitle, onNewSession, providers = [], activeProviderId, onActiveProviderChange, activeFileName, activeFilePath }: ChatViewProps) {
-  const [currentTheme, setCurrentTheme] = useState<Theme>('dark');
+export function ChatView({ currentConversation, plugins, workspacePath, projectName, theme = 'dark', backendPort, onUpdateSessionTitle, onNewSession, providers = [], activeProviderId, onActiveProviderChange, activeFileName, activeFilePath, onNewProject, onOpenFolder, onFileSelect, initialPrompt, onAiCreateComplete, newSessionFromProject }: ChatViewProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [chatMode, setChatMode] = useState<ChatMode>('default');
   const chatMessagesRef = useRef<{ scrollToBottom: () => void } | null>(null);
   const sessionIdRef = useRef<string>('');
   const conversationIdRef = useRef<string | number>('');
+  const isStreamingRef = useRef(false);
+  const aiCreateRef = useRef<{ type: 'skill' | 'agent'; name: string } | null>(null);
+  const initialPromptSentRef = useRef(false);
+  const onUpdateSessionTitleRef = useRef(onUpdateSessionTitle);
+  onUpdateSessionTitleRef.current = onUpdateSessionTitle;
+  const onNewSessionRef = useRef(onNewSession);
+  onNewSessionRef.current = onNewSession;
+  const workspacePathRef = useRef(workspacePath);
+  workspacePathRef.current = workspacePath;
 
-  // 累积的消息内容 - 只有 think 标签内的才是思考块
-  const accumulatedContentRef = useRef<{
-    think: string;      // 思考内容（<think/`thinking`> 标签内，累积）
-    text: string;       // 正文内容（包括 reason 和 text 类型，累积）
-    actions: Array<{    // 每个工具调用独立一个块
-      text: string;
-      toolName?: string;
-      args?: Record<string, unknown>;
-    }>;
-  }>({
-    think: '',
-    text: '',
-    actions: [],
-  });
+  // 有序 segment 列表 — 保留 think/action/text 的真实交错顺序
+  type AccSegment =
+    | { type: 'THINK'; text: string }
+    | { type: 'TEXT'; text: string; agentName?: string }
+    | { type: 'ACTION'; text: string; toolName?: string; args?: Record<string, unknown> };
+
+  const accumulatedContentRef = useRef<AccSegment[]>([]);
+
+  // RAF 节流：流式更新时合并多次 chunk 到一帧渲染
+  const rafIdRef = useRef<number | null>(null);
+  const pendingUpdateRef = useRef(false);
+
+  const scheduleMessageUpdate = useCallback(() => {
+    if (pendingUpdateRef.current) return;
+    pendingUpdateRef.current = true;
+    rafIdRef.current = requestAnimationFrame(() => {
+      pendingUpdateRef.current = false;
+      const contentItems = buildContentItems();
+      const tempMsg: Message = {
+        id: assistantMsgIdRef.current,
+        role: 'ASSISTANT',
+        timestamp: new Date().toLocaleTimeString(),
+        contents: contentItems
+      };
+      setMessages(prev => {
+        const existingIndex = prev.findIndex(m => m.id === assistantMsgIdRef.current);
+        if (existingIndex >= 0) {
+          const updated = [...prev];
+          updated[existingIndex] = tempMsg;
+          return updated;
+        }
+        return [...prev, tempMsg];
+      });
+      chatMessagesRef.current?.scrollToBottom();
+    });
+  }, []);
+
+  // 待持久化的首条用户消息（新会话时暂存，done/error 时真正保存）
+  const pendingPersistRef = useRef<{
+    sessionId: string;
+    userMessage: { timestamp: string; contents: string };
+    messageText: string;
+  } | null>(null);
 
   // 当前 assistant 消息 ID
   const assistantMsgIdRef = useRef<number>(0);
@@ -287,6 +328,7 @@ export function ChatView({ currentConversation, plugins, workspacePath, onUpdate
     loadingTimerRef.current = setTimeout(() => {
       console.log('[ChatView] Loading timeout (120s), auto-stopping');
       setIsLoading(false);
+      isStreamingRef.current = false;
     }, 120000);
   }, []);
 
@@ -297,138 +339,224 @@ export function ChatView({ currentConversation, plugins, workspacePath, onUpdate
     }
   }, []);
 
-  // 更新 ref
+  // 更新 ref（流式输出期间不更新，避免 temp→real ID 切换导致 WS 回调丢消息）
   useEffect(() => {
     if (!currentConversation.id) return;
+    if (isStreamingRef.current) return;
     sessionIdRef.current = currentConversation.id.toString();
     conversationIdRef.current = currentConversation.id;
   }, [currentConversation.id]);
 
-  function toggleTheme() {
-    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-    setCurrentTheme(newTheme);
-    document.documentElement.setAttribute('data-theme', newTheme);
-    localStorage.setItem('soloncode-theme', newTheme);
-  }
-
-  function loadTheme() {
-    const savedTheme = localStorage.getItem('soloncode-theme') as Theme | null;
-    if (savedTheme) {
-      setCurrentTheme(savedTheme);
-    } else {
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      setCurrentTheme(prefersDark ? 'dark' : 'light');
-    }
-    const themeToSet = savedTheme || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-    document.documentElement.setAttribute('data-theme', themeToSet);
-  }
-
-  // 构建当前累积内容的 ContentItem 数组
-  function buildContentItems(): ContentItem[] {
-    const acc = accumulatedContentRef.current;
-    const items: ContentItem[] = [];
-
-    // 只有 think 标签内的内容才是思考块（可折叠）
-    if (acc.think.trim()) {
-      items.push({ type: 'think', text: acc.think.trim() });
-    }
-
-    // 每个工具调用独立显示
-    for (const act of acc.actions) {
-      if (act.text.trim()) {
-        items.push({
-          type: 'action',
-          text: act.text.trim(),
-          toolName: act.toolName,
-          args: act.args
-        });
-      }
-    }
-
-    // 正文内容（包括 reason 和 text 类型）
-    if (acc.text.trim()) {
-      items.push({ type: 'text', text: acc.text.trim() });
-    }
-
-    return items;
-  }
-
-  // 注册消息回调
+  // 重置 initialPrompt 状态
   useEffect(() => {
-    if (!currentConversation.id) return;
-    const sessionId = currentConversation.id.toString();
+    if (!initialPrompt) {
+      initialPromptSentRef.current = false;
+      aiCreateRef.current = null;
+    }
+  }, [initialPrompt]);
+
+  // 构建当前累积内容的 ContentItem 数组 — 直接映射有序 segment
+  function buildContentItems(): ContentItem[] {
+    const segments = accumulatedContentRef.current;
+    return segments
+      .filter(seg => seg.text.trim())
+      .map(seg => {
+        if (seg.type === 'THINK') {
+          return { type: 'THINK' as const, text: seg.text.trim() };
+        }
+        if (seg.type === 'ACTION') {
+          return {
+            type: 'ACTION' as const,
+            text: seg.text.trim(),
+            toolName: seg.toolName,
+            args: seg.args,
+          };
+        }
+        // TEXT — 过滤末尾模型 trace
+        let text = seg.text.trim();
+        text = text.replace(/`\s*\([\w.\-]+(?:,\s*\d+\.?\d*\w+)*\)\s*`\s*$/, '');
+        text = text.replace(/\([\w.\-]+(?:,\s*\d+\.?\d*\w+)*\)\s*$/, '');
+        return { type: 'TEXT' as const, text, agentName: seg.agentName };
+      })
+      .filter(item => item.text.length > 0);
+  }
+
+  // 注册消息回调（只注册一次，通过 ref 获取当前 sessionId）
+  useEffect(() => {
     const wsManager = WebSocketManager.getInstance();
 
-    const handleMessage = (data: any) => {
-      const msgSessionId = data.sessionId || sessionId;
+    // 持久化待保存的用户消息（仅保存消息，不触发会话持久化）
+    // 返回 pending 信息供 done/error 后触发会话持久化
+    async function flushPendingUserMessage(): Promise<{ sessionId: string; title: string; wasNew: boolean } | null> {
+      const pending = pendingPersistRef.current;
+      if (!pending) return null;
+      pendingPersistRef.current = null;
+
+      await saveMessage({
+        conversationId: pending.sessionId,
+        role: 'USER',
+        timestamp: pending.userMessage.timestamp,
+        contents: pending.userMessage.contents,
+        workspacePath: workspacePathRef.current,
+      });
+
+      return {
+        sessionId: pending.sessionId,
+        title: pending.messageText.trim().slice(0, 20) + (pending.messageText.trim().length > 20 ? '...' : ''),
+        wasNew: pending.sessionId.startsWith('temp-'),
+      };
+    }
+
+    const handleMessage = async (data: any) => {
+      const msgSessionId = data.sessionId || conversationIdRef.current.toString();
 
       // done / error 类型必须处理，不受 session 校验限制（保证 loading 状态正确）
       if (data.type === 'done') {
         clearLoadingTimer();
+
+        // 持久化用户消息（如果是新会话）
+        const pending = await flushPendingUserMessage();
+
         // 构建最终消息
         const contentItems = buildContentItems();
         if (contentItems.length > 0) {
           const finalMsg: Message = {
             id: assistantMsgIdRef.current,
-            role: 'assistant',
+            role: 'ASSISTANT',
             timestamp: new Date().toLocaleTimeString(),
             contents: contentItems,
             metadata: {
               modelName: data.modelName,
               totalTokens: data.totalTokens,
-              elapsedMs: data.elapsedMs
+              elapsedMs: data.elapsedMs,
             }
           };
 
           setMessages(prev => {
-            // 移除之前的临时消息，添加最终消息
             const filtered = prev.filter(m => m.id !== assistantMsgIdRef.current);
             return [...filtered, finalMsg];
           });
 
-          // 保存到数据库（包含 metadata）
-          saveMessage({
-            conversationId: msgSessionId,
-            role: 'assistant',
+          // 保存助手消息（用 temp ID，后续 reassignMessages 会统一转换）
+          await saveMessage({
+            conversationId: pending?.sessionId || msgSessionId,
+            role: 'ASSISTANT',
             timestamp: finalMsg.timestamp,
-            contents: JSON.stringify({ items: contentItems, metadata: finalMsg.metadata })
-          }).catch(err => console.error('Failed to save message:', err));
+            contents: JSON.stringify({ items: contentItems, metadata: finalMsg.metadata }),
+            workspacePath: workspacePathRef.current,
+          });
+        }
+
+        // 所有消息保存后，触发会话持久化（reassignMessages 会把 temp ID 转为 real ID）
+        if (pending?.wasNew && onUpdateSessionTitleRef.current) {
+          onUpdateSessionTitleRef.current(pending.sessionId, pending.title);
+        }
+
+        // AI 创建自动保存
+        if (aiCreateRef.current) {
+          const { type, name } = aiCreateRef.current;
+          const aiContent = accumulatedContentRef.current
+            .filter(seg => seg.type === 'TEXT')
+            .map(seg => seg.text.trim())
+            .join('\n')
+            .trim();
+          if (aiContent) {
+            try {
+              if (type === 'skill') {
+                await invoke('create_skill', { name, description: '', content: aiContent });
+              } else {
+                await invoke('create_agent', { name, description: '', content: aiContent });
+              }
+              onAiCreateComplete?.({ type, name });
+            } catch (err) {
+              console.error('[ChatView] AI 创建自动保存失败:', err);
+            }
+          }
+          aiCreateRef.current = null;
         }
 
         // 重置累积器
-        accumulatedContentRef.current = {
-          think: '',
-          text: '',
-          actions: [],
-        };
+        accumulatedContentRef.current = [];
+        if (rafIdRef.current) { cancelAnimationFrame(rafIdRef.current); rafIdRef.current = null; }
+        pendingUpdateRef.current = false;
 
         setIsLoading(false);
+        isStreamingRef.current = false;
         chatMessagesRef.current?.scrollToBottom();
         return;
       }
 
       if (data.type === 'error') {
         clearLoadingTimer();
+
+        // 即使出错也要持久化用户消息
+        const pending = await flushPendingUserMessage();
+
         const errorText = data.text || '未知错误';
         const errorMsg: Message = {
           id: Date.now(),
-          role: 'error',
+          role: 'ERROR',
           timestamp: new Date().toLocaleTimeString(),
-          contents: [{ type: 'error', text: errorText }]
+          contents: [{ type: 'ERROR', text: errorText }]
         };
         setMessages(prev => [...prev, errorMsg]);
+
+        await saveMessage({
+          conversationId: pending?.sessionId || msgSessionId,
+          role: 'ERROR',
+          timestamp: errorMsg.timestamp,
+          contents: JSON.stringify(errorMsg.contents),
+          workspacePath: workspacePathRef.current,
+        });
+
+        // 所有消息保存后，触发会话持久化
+        if (pending?.wasNew && onUpdateSessionTitleRef.current) {
+          onUpdateSessionTitleRef.current(pending.sessionId, pending.title);
+        }
+
         setIsLoading(false);
+        isStreamingRef.current = false;
         return;
       }
 
-      // 其他消息类型检查是否属于当前会话
-      if (msgSessionId !== conversationIdRef.current.toString()) {
-        console.log('[WS] Message for different session, ignoring:', msgSessionId);
+      // 其他消息类型检查是否属于当前会话（同时接受 temp ID 和重分配后的真实 ID）
+      if (msgSessionId !== conversationIdRef.current.toString() && msgSessionId !== sessionIdRef.current) {
         return;
       }
 
-      const type = data.type as ContentType;
+      // HITL 审批请求 — 直接追加到当前消息
+      if (data.type === 'hitl') {
+        const hitlItem: ContentItem = {
+          type: 'HITL',
+          text: '',
+          toolName: data.toolName,
+          command: data.command,
+        };
+        setMessages(prev => {
+          const contentItems = buildContentItems();
+          contentItems.push(hitlItem);
+          const tempMsg: Message = {
+            id: assistantMsgIdRef.current,
+            role: 'ASSISTANT',
+            timestamp: new Date().toLocaleTimeString(),
+            contents: contentItems
+          };
+          const existingIndex = prev.findIndex(m => m.id === assistantMsgIdRef.current);
+          if (existingIndex >= 0) {
+            const updated = [...prev];
+            updated[existingIndex] = tempMsg;
+            return updated;
+          }
+          return [...prev, tempMsg];
+        });
+        chatMessagesRef.current?.scrollToBottom();
+        return;
+      }
+
+      const rawType = (data.type as string).toUpperCase();
+      const type = (rawType === 'COMMAND' ? 'TEXT' : rawType) as ContentType;
       let text = filterEmptyTags(data.text || '');
+      if (rawType === 'COMMAND') text += '\n';
 
       if (text === '') return;
 
@@ -436,67 +564,48 @@ export function ChatView({ currentConversation, plugins, workspacePath, onUpdate
       startLoadingTimer();
 
       // 累积内容
-      // 注意：只有 think 类型（<think/`thinking`> 标签内）才是思考块
-      // reason 类型也是正文内容
-      const acc = accumulatedContentRef.current;
+      // 累积内容 — 保留交错顺序
+      const segs = accumulatedContentRef.current;
+      const last = segs.length > 0 ? segs[segs.length - 1] : null;
+
       switch (type) {
-        case 'think':
-          acc.think += text;
-          break;
-        case 'reason':
-          // reason 也是正文内容
-          acc.text += text;
-          break;
-        case 'action':
-          if (data.toolName) {
-            // 新的工具调用开始，推入新条目
-            acc.actions.push({
-              text: text,
-              toolName: data.toolName,
-              args: data.args
-            });
-          } else if (acc.actions.length > 0) {
-            // 追加到当前最后一个 action
-            acc.actions[acc.actions.length - 1].text += text;
+        case 'THINK':
+          if (last && last.type === 'THINK') {
+            last.text += text;
           } else {
-            // 没有 toolName 且没有已有 action，创建一个
-            acc.actions.push({ text });
+            segs.push({ type: 'THINK', text });
           }
           break;
-        case 'text':
-          acc.text += text;
+        case 'TEXT':
+        case 'REASON':
+          if (last && last.type === 'TEXT') {
+            last.text += text;
+            if (data.agentName) last.agentName = data.agentName;
+          } else {
+            segs.push({ type: 'TEXT', text, agentName: data.agentName });
+          }
+          break;
+        case 'ACTION':
+          if (data.toolName) {
+            segs.push({ type: 'ACTION', text, toolName: data.toolName, args: data.args });
+          } else if (last && last.type === 'ACTION') {
+            last.text += text;
+          } else {
+            segs.push({ type: 'ACTION', text });
+          }
           break;
       }
 
-      // 实时更新显示（显示当前累积的内容）
-      setMessages(prev => {
-        const contentItems = buildContentItems();
-        const tempMsg: Message = {
-          id: assistantMsgIdRef.current,
-          role: 'assistant',
-          timestamp: new Date().toLocaleTimeString(),
-          contents: contentItems
-        };
-
-        // 查找是否已有临时消息
-        const existingIndex = prev.findIndex(m => m.id === assistantMsgIdRef.current);
-        if (existingIndex >= 0) {
-          const updated = [...prev];
-          updated[existingIndex] = tempMsg;
-          return updated;
-        }
-        return [...prev, tempMsg];
-      });
-
-      chatMessagesRef.current?.scrollToBottom();
+      // 实时更新显示（RAF 节流，合并多次 chunk）
+      scheduleMessageUpdate();
     };
 
-    wsManager.registerCallback(sessionId, handleMessage);
+    wsManager.registerCallback(handleMessage);
 
     return () => {
-      wsManager.unregisterCallback(sessionId);
+      wsManager.unregisterCallback();
     };
-  }, [currentConversation.id]);
+  }, []);
 
   const sendMessage = useCallback(async (messageText: string, options: SendOptions) => {
     let sessionId = currentConversation.id?.toString();
@@ -521,41 +630,47 @@ export function ChatView({ currentConversation, plugins, workspacePath, onUpdate
       fullMessage = `${contextStr}\n\n${messageText}`;
     }
 
+    // 拼接文本附件内容（图片通过 attachments 字段单独发送）
+    if (options.attachments && options.attachments.length > 0) {
+      const textParts = options.attachments
+        .filter(att => att.type !== 'image')
+        .map(att => `--- 文件: ${att.name} ---\n${att.content}\n---`);
+      if (textParts.length > 0) {
+        fullMessage = `${textParts.join('\n\n')}\n\n${fullMessage}`;
+      }
+    }
+
     const userMessage: Message = {
       id: Date.now(),
-      role: 'user',
+      role: 'USER',
       timestamp: new Date().toLocaleTimeString(),
-      contents: [{ type: 'text', text: fullMessage }]
+      contents: [{ type: 'TEXT', text: fullMessage }]
     };
 
     setMessages(prev => [...prev, userMessage]);
 
-    // 将会话保存到列表（如果尚未保存）
-    if (onUpdateSessionTitle) {
-      const title = messageText.trim().slice(0, 20) + (messageText.trim().length > 20 ? '...' : '');
-      onUpdateSessionTitle(sessionId, title);
-    }
-
-    await saveMessage({
-      conversationId: sessionId,
-      role: 'user',
-      timestamp: userMessage.timestamp,
-      contents: JSON.stringify(userMessage.contents)
-    });
+    // 标记流式状态，防止会话 ID 变化时重新加载消息
+    isStreamingRef.current = true;
 
     setIsLoading(true);
     startLoadingTimer(); // 开始超时计时
 
     // 重置累积器
-    accumulatedContentRef.current = {
-      think: '',
-      text: '',
-      actions: [],
-    };
+    accumulatedContentRef.current = [];
 
     assistantMsgIdRef.current = Date.now() + Math.floor(Math.random() * 1000);
 
     chatMessagesRef.current?.scrollToBottom();
+
+    // 暂存用户消息信息，等 done/error 时再真正持久化
+    pendingPersistRef.current = {
+      sessionId: sessionId!,
+      userMessage: {
+        timestamp: userMessage.timestamp,
+        contents: JSON.stringify(userMessage.contents),
+      },
+      messageText,
+    };
 
     try {
       const wsManager = WebSocketManager.getInstance();
@@ -564,43 +679,109 @@ export function ChatView({ currentConversation, plugins, workspacePath, onUpdate
       // options.model 格式: "providerId" 或 "providerId__modelId"
       const sepIdx = options.model.indexOf('__');
       const providerId = sepIdx >= 0 ? options.model.substring(0, sepIdx) : options.model;
+      const specificModelId = sepIdx >= 0 ? options.model.substring(sepIdx + 2) : null;
       const selectedProvider = providers.find(p => p.id === providerId);
+      // 优先使用 availableModels 展开后的具体模型 ID，否则用 provider 默认 model
+      const actualModelId = specificModelId || selectedProvider?.model || options.modelName;
       if (selectedProvider) {
-        await registerModelToBackend(selectedProvider);
+        await registerModelToBackend({ ...selectedProvider, model: actualModelId });
       }
 
       // 用实际模型名发送
-      const modelName = selectedProvider?.model || options.modelName;
+      const modelName = actualModelId;
 
-      const request = {
+      const request: Record<string, unknown> = {
         input: fullMessage,
         sessionId: sessionId,
         model: modelName,
         agent: options.agent,
         cwd: workspacePath || undefined,
+        mode: chatMode,
       };
 
-      await wsManager.sendMessage(sessionId, request);
+      // 附件数据（图片 base64，文本内容）
+      if (options.attachments && options.attachments.length > 0) {
+        request.attachments = options.attachments.map(att => {
+          if (att.type === 'image') {
+            // content 是 data URL: "data:image/png;base64,..."
+            const match = att.content.match(/^data:([^;]+);base64,(.+)$/);
+            return {
+              type: 'image',
+              name: att.name,
+              data: match ? match[2] : att.content,
+              mimeType: match ? match[1] : 'image/png',
+            };
+          }
+          return {
+            type: 'file',
+            name: att.name,
+            data: att.content,
+            mimeType: 'text/plain',
+          };
+        });
+      }
+
+      await wsManager.sendMessage(request);
 
     } catch (error) {
       console.error('Failed to send message:', error);
-      const errorMessage: Message = {
-        id: Date.now() + 1,
-        role: 'error',
-        timestamp: new Date().toLocaleTimeString(),
-        contents: [{ type: 'error', text: `请求失败: ${error instanceof Error ? error.message : '未知错误'}` }]
-      };
-      setMessages(prev => [...prev, errorMessage]);
 
-      await saveMessage({
-        conversationId: sessionId,
-        role: 'error',
-        timestamp: errorMessage.timestamp,
-        contents: JSON.stringify(errorMessage.contents)
-      });
+      // WS 连接失败时不会有 done/error 回调，直接在此持久化
+      const pending = pendingPersistRef.current;
+      if (pending) {
+        pendingPersistRef.current = null;
+        await saveMessage({
+          conversationId: pending.sessionId,
+          role: 'USER',
+          timestamp: pending.userMessage.timestamp,
+          contents: pending.userMessage.contents,
+          workspacePath,
+        });
+
+        const errorMessage: Message = {
+          id: Date.now() + 1,
+          role: 'ERROR',
+          timestamp: new Date().toLocaleTimeString(),
+          contents: [{ type: 'ERROR', text: `请求失败: ${error instanceof Error ? error.message : '未知错误'}` }]
+        };
+        setMessages(prev => [...prev, errorMessage]);
+
+        await saveMessage({
+          conversationId: pending.sessionId,
+          role: 'ERROR',
+          timestamp: errorMessage.timestamp,
+          contents: JSON.stringify(errorMessage.contents),
+          workspacePath,
+        });
+
+        // 触发会话持久化（reassignMessages 会处理 temp→real）
+        if (pending.sessionId.startsWith('temp-') && onUpdateSessionTitle) {
+          onUpdateSessionTitle(pending.sessionId, pending.messageText.trim().slice(0, 20) + (pending.messageText.trim().length > 20 ? '...' : ''));
+        }
+      }
+
       setIsLoading(false);
+      isStreamingRef.current = false;
     }
   }, [currentConversation, onNewSession, onUpdateSessionTitle, workspacePath, providers]);
+
+  // AI 创建：自动发送初始 prompt
+  useEffect(() => {
+    if (!initialPrompt || initialPromptSentRef.current) return;
+    const convId = currentConversation.id?.toString();
+    if (!convId) return;
+
+    initialPromptSentRef.current = true;
+    aiCreateRef.current = { type: initialPrompt.type, name: initialPrompt.name };
+
+    sendMessage(initialPrompt.prompt, {
+      model: activeProviderId || '',
+      modelName: '',
+      agent: '',
+      contexts: [],
+      attachments: [],
+    });
+  }, [initialPrompt, currentConversation.id, sendMessage, activeProviderId]);
 
   async function loadConversationMessages(convId: string | number) {
     const storedMessages = await getMessagesByConversation(convId);
@@ -613,9 +794,9 @@ export function ChatView({ currentConversation, plugins, workspacePath, onUpdate
         let metadata = !Array.isArray(parsed) && parsed.metadata ? parsed.metadata : undefined;
         return {
           id: Date.now() + index,
-          role: msg.role as Message['role'],
+          role: (msg.role as string).toUpperCase() as Message['role'],
           timestamp: msg.timestamp || new Date().toLocaleTimeString(),
-          contents,
+          contents: contents.map((c: any) => ({ ...c, type: (c.type as string).toUpperCase() })),
           metadata,
         };
       }));
@@ -624,19 +805,54 @@ export function ChatView({ currentConversation, plugins, workspacePath, onUpdate
     }
   }
 
+  // 会话切换时加载/清空消息
+  // 依赖 currentConversation.id（string | number）而非整个对象，避免 sessions 变化导致误触发
+  const currentConversationId = currentConversation.id;
   useEffect(() => {
-    loadTheme();
-  }, []);
+    const id = currentConversationId?.toString();
 
-  useEffect(() => {
-    if (currentConversation.id) {
-      loadConversationMessages(currentConversation.id);
-    } else {
+    if (!id) {
       setMessages([]);
+      return;
     }
-  }, [currentConversation]);
+
+    // 临时会话：清空消息
+    if (id.startsWith('temp-') || id.startsWith('pending-')) {
+      setMessages([]);
+      return;
+    }
+
+    // 正在流式输出时（ID 从 temp 替换为 real），跳过加载
+    if (isStreamingRef.current) {
+      return;
+    }
+
+    // 正常会话：从数据库加载历史消息
+    loadConversationMessages(id);
+  }, [currentConversationId]);
 
   // 停止当前请求
+  const handleHitlAction = useCallback(async (action: 'approve' | 'reject') => {
+    const ws = WebSocketManager.getInstance() as any;
+    if (ws.activeWs && ws.activeWs.readyState === WebSocket.OPEN) {
+      ws.activeWs.send(JSON.stringify({
+        type: 'hitl_action',
+        action,
+        sessionId: sessionIdRef.current,
+      }));
+    } else {
+      // 短连接发送
+      const mgr = WebSocketManager.getInstance();
+      const conn = await (mgr as any).createConnection(sessionIdRef.current);
+      conn.send(JSON.stringify({
+        type: 'hitl_action',
+        action,
+        sessionId: sessionIdRef.current,
+      }));
+      conn.close();
+    }
+  }, []);
+
   const handleStop = useCallback(() => {
     WebSocketManager.getInstance().cancel();
     clearLoadingTimer();
@@ -647,7 +863,7 @@ export function ChatView({ currentConversation, plugins, workspacePath, onUpdate
     if (contentItems.length > 0) {
       const finalMsg: Message = {
         id: assistantMsgIdRef.current,
-        role: 'assistant',
+        role: 'ASSISTANT',
         timestamp: new Date().toLocaleTimeString(),
         contents: contentItems,
       };
@@ -658,11 +874,7 @@ export function ChatView({ currentConversation, plugins, workspacePath, onUpdate
     }
 
     // 重置累积器
-    accumulatedContentRef.current = {
-      think: '',
-      text: '',
-      actions: [],
-    };
+    accumulatedContentRef.current = [];
   }, []);
 
   // 模型切换时推送配置到后端
@@ -678,24 +890,36 @@ export function ChatView({ currentConversation, plugins, workspacePath, onUpdate
   }, [providers, onActiveProviderChange]);
 
   const isEmpty = messages.length === 0 && !isLoading;
+  const showHeader = !isEmpty;
+
+  const handleDeleteMessage = useCallback((id: number) => {
+    setMessages(prev => prev.filter(m => m.id !== id));
+  }, []);
 
   return (
-    <main className="main-content">
-      {!isEmpty && (
-      <ChatHeader
-        title={currentConversation.title}
-        status={currentConversation.status}
-        theme={currentTheme}
-        onToggleTheme={toggleTheme}
-      />
+    <main className={`main-content${isEmpty ? ' empty-state' : ''}`}>
+      {showHeader && (
+        <ChatHeader title={currentConversation.title} status={currentConversation.status} projectName={currentConversation.workspacePath && currentConversation.workspacePath === workspacePath ? projectName : undefined} />
       )}
-      <ChatMessages
-        ref={chatMessagesRef}
-        messages={messages}
-        isLoading={isLoading}
-        theme={currentTheme}
-      />
-      <ChatInput onSend={sendMessage} isLoading={isLoading} onStop={handleStop} providers={providers} activeProviderId={activeProviderId} onModelChange={handleModelChange} activeFileName={activeFileName} />
+      <ChatMessages ref={chatMessagesRef} messages={messages} isLoading={isLoading} theme={theme} projectName={projectName} onDeleteMessage={handleDeleteMessage} onHitlAction={handleHitlAction} onFileSelect={onFileSelect} />
+
+      {isEmpty ? (
+        <div className="empty-center-container">
+          <div className="empty-state-hero">
+            <div className="hero-logo">SolonCode</div>
+            <div className="hero-slogan">{newSessionFromProject && projectName ? `在 ${projectName} ` : ''}做你想做的事</div>
+          </div>
+          <ChatInput onSend={sendMessage} isLoading={isLoading} onStop={handleStop} providers={providers} activeProviderId={activeProviderId} onModelChange={handleModelChange} activeFileName={activeFileName} backendPort={backendPort} showStartWork={!workspacePath} onNewProject={onNewProject} onOpenFolder={onOpenFolder} workspacePath={workspacePath} mode={chatMode} onModeChange={setChatMode} />
+        </div>
+      ) : (
+        <ChatInput onSend={sendMessage} isLoading={isLoading} onStop={handleStop} providers={providers} activeProviderId={activeProviderId} onModelChange={handleModelChange} activeFileName={activeFileName} backendPort={backendPort} showStartWork={!workspacePath} onNewProject={onNewProject} onOpenFolder={onOpenFolder} workspacePath={workspacePath} />
+      )}
+      {/* 底部提示 */}
+        <div className="input-footer">
+          <span className="input-hint">
+            Enter 发送，Shift + Enter 换行，/ 命令，# 引用上下文，@ 选择智能体
+          </span>
+        </div>
     </main>
   );
 }

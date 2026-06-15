@@ -1,7 +1,7 @@
 <div align="center">
 <h1>SolonCode</h1>
 <p>Ein Open-Source-Coding-Agent, der mit <a href="https://github.com/opensolon/solon-ai">Solon AI</a> und Java entwickelt wurde (unterstützt Java8 bis Java26 Laufzeitumgebungen)</p>
-<p>Aktuelle Version: v2026.5.3</p>
+<p>Aktuelle Version: v2026.6.16</p>
 <img height="260" src="SHOW.png" />
 <img height="260" src="SHOW2.png" />
 </div>
@@ -21,7 +21,7 @@
 Installation:
 
 ```bash
-# Mac / Linux:
+# Mac / Linux / Harmony PC:
 curl -fsSL https://solon.noear.org/soloncode/setup.sh | bash
 
 # Windows (PowerShell):
@@ -36,16 +36,28 @@ Konfiguration (muss nach der Installation angepasst werden):
 
 ## Ausführung
 
-Führen Sie den Befehl `soloncode` in einem beliebigen Verzeichnis in der Konsole aus (d.h. Ihr Arbeitsverzeichnis).
+Führen Sie den Befehl `soloncode` (CLI-interaktiv) oder `soloncode web 0` (Web-interaktiv) in einem beliebigen Verzeichnis in der Konsole aus (d.h. Ihr Arbeitsverzeichnis).
+
+* `soloncode` (CLI-interaktiv)
 
 ```bash
 demo@MacBook-Pro ~ % soloncode
-SolonCode v2026.5.3
-/Users/noear
+SolonCode v2026.6.16 PID-74080 Model:deepseek-v4-flash
+/path/demo
 Tips: (esc) interrupt | /(tab) ls command | @(tab) ls agent
 
 User
 > 
+```
+
+* `soloncode web 0` (Web-interaktiv)
+
+```bash
+demo@MacBook-Pro ~ % soloncode web 0
+SolonCode v2026.6.16 PID-73617 Model:deepseek-v4-flash
+/path/demo
+2026-05-20 09:35
+Web interface: http://localhost:50488/
 ```
 
 Funktionstest (probieren Sie die folgenden Aufgaben, von einfach bis komplex):
@@ -67,12 +79,12 @@ Wenn Sie an der Mitwirkung am Code interessiert sind, lesen Sie bitte die [Mitwi
 
 Wenn Sie "soloncode" in Ihrem Projektnamen verwenden (z.B. "soloncode-dashboard" oder "soloncode-app"), geben Sie bitte in der README an, dass das Projekt nicht vom OpenSolon-Team offiziell entwickelt wurde und keine Verbindung dazu besteht.
 
-## Häufig gestellte Fragen: Was ist der Unterschied zu Claude Code und OpenCode?
+## Häufig gestellte Fragen: Was ist der Unterschied zu Claude Code?
 
 Sie sind funktionell ähnlich, mit folgenden wesentlichen Unterschieden:
 
-* Mit Java entwickelt, 100% Open-Source.
+* Mit Java entwickelt, 100% Open-Source. Kompatibel mit BiSheng JDK (Huawei) und Harmony PC.
 * Rein chinesisch Prompt-gesteuert und gebaut
-* Anbieterunabhängig. Erfordert Modellkonfiguration. Die Modelliteration wird Lücken schließen und Kosten senken, was den anbieterunabhängigen Ansatz wichtig macht.
-* Fokussiert auf Terminal-Kommandozeilenschnittstelle (CLI), läuft über Systembefehle.
+* Anbieterunabhängig. Modelle nach Bedarf konfigurieren. Die Modelliteration wird Lücken schließen und Kosten senken, was eine flexible Konfiguration wichtig macht.
+* Gleichzeitig unterstützt: Terminal-Kommandozeilenschnittstelle (CLI), Browser-Oberfläche (WEB) und Desktop-IDE-Oberfläche (Desktop).
 * Unterstützt Web, ACP-Protokoll zur Fernkommunikation.

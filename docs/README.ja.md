@@ -1,7 +1,7 @@
 <div align="center">
 <h1>SolonCode</h1>
 <p><a href="https://github.com/opensolon/solon-ai">Solon AI</a>とJavaで構築されたオープンソースのコーディングエージェント（Java8からJava26のランタイム環境をサポート）</p>
-<p>最新バージョン: v2026.5.3</p>
+<p>最新バージョン: v2026.6.16</p>
 <img height="260" src="SHOW.png" />
 <img height="260" src="SHOW2.png" />
 </div>
@@ -21,7 +21,7 @@
 インストール方法：
 
 ```bash
-# Mac / Linux:
+# Mac / Linux / Harmony PC:
 curl -fsSL https://solon.noear.org/soloncode/setup.sh | bash
 
 # Windows (PowerShell):
@@ -36,16 +36,28 @@ irm https://solon.noear.org/soloncode/setup.ps1 | iex
 
 ## 実行
 
-コンソールの任意のディレクトリ（ワークスペース）で `soloncode` コマンドを実行してください。
+コンソールの任意のディレクトリ（ワークスペース）で、`soloncode`（CLI対話）または `soloncode web 0`（Web対話）コマンドを実行してください。
+
+* `soloncode`（CLI対話）
 
 ```bash
 demo@MacBook-Pro ~ % soloncode
-SolonCode v2026.5.3
-/Users/noear
+SolonCode v2026.6.16 PID-74080 Model:deepseek-v4-flash
+/path/demo
 Tips: (esc) interrupt | /(tab) ls command | @(tab) ls agent
 
 User
 > 
+```
+
+* `soloncode web 0`（Web対話）
+
+```bash
+demo@MacBook-Pro ~ % soloncode web 0
+SolonCode v2026.6.16 PID-73617 Model:deepseek-v4-flash
+/path/demo
+2026-05-20 09:35
+Web interface: http://localhost:50488/
 ```
 
 機能テスト（以下のタスクをお試しください、簡単なものから複雑なものへ）：
@@ -67,12 +79,12 @@ User
 
 プロジェクト名に「soloncode」を使用する場合（例：「soloncode-dashboard」や「soloncode-app」）、READMEに当該プロジェクトがOpenSolonチームによって公式に開発されたものではなく、関連性がないことを明記してください。
 
-## よくある質問: Claude CodeやOpenCodeとの違いは？
+## よくある質問: Claude Codeとの違いは？
 
 機能的には類似していますが、主な違いは以下の通りです：
 
-* Javaで構築されており、100%オープンソースです
+* Javaで構築されており、100%オープンソースです。BiSheng JDK（Huawei）およびHarmony PCに対応しています。
 * 純中国語プロンプトで駆動・構築
-* プロバイダーに依存しません。モデルの設定が必要です。モデルの進化によりギャップが縮まり、コストが削減されるため、プロバイダー非依存のアプローチが重要になります
-* ターミナルのコマンドラインインターフェース（CLI）に重点を置いており、システムコマンド経由で実行されます
+* プロバイダーに依存しません。必要に応じてモデルを設定できます。モデルの進化によりギャップが縮まり、コストが削減されるため、自由な設定が重要です
+* ターミナルのコマンドラインインターフェース（CLI）、ブラウザインターフェース（WEB）、デスクトップIDEインターフェース（Desktop）を同時にサポートします
 * Web、ACPプロトコルをサポートし、リモート通信が可能です

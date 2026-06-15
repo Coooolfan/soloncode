@@ -1,5 +1,230 @@
 
 
+### v2026.6.16
+
+* 添加 soloncode bash 输出大小限制机制
+* 添加 soloncode web 界面效果设置块（支持工具显示展开或收起）
+* 添加 soloncode loop 立好执行机制
+* 优化 soloncode 上下文压缩算法
+* 优化 soloncode edit 匹配算法
+* 优化 soloncode web tool 调用显示效果
+* 优化 soloncode web edit（git diff） 和 bash（terminal） 显示效果
+* 优化 soloncode web 消息列表的复制按钮效果
+* 调整 soloncode loop 机制
+* 细节优化
+
+### v2026.6.15
+
+* 添加 soloncode web edit 工具（gitdiff 显示）
+* 添加 soloncode web write 工具语法亮显显示
+* 调整 soloncode loop 任务列表与编辑简化
+* 修复 soloncode web 左侧面板 todo 进度（非当前对话）不更新的问题
+* 细节优化
+
+### v2026.6.14
+
+* 调整 soloncode 向去 config.yml 过度（当产生 setting.json 后移除 config.yml）
+* 修复 soloncode web 新对话发送 command 对话记录没名字的问题
+* 修复 soloncode loop maker/checker 模式下无法停止的问题
+* 细节优化
+
+### v2026.6.13
+
+* 添加 soloncode web 左侧面板拖动大小的功能（同时取消展开与收起的动画）
+* 添加 soloncode loop goal 模式支持
+* 优化 soloncode web loop 管理面板
+* 修复 soloncode 在用户根目录启动时，配置错乱问题
+* 修复 soloncode web 默认模型禁用后，对话列表没有更新的问题
+* 细节优化
+
+### v2026.6.12
+
+* 新增 soloncode Loop Engineering 概念支持
+* 添加 soloncode web loop 管理面板
+* 优化 soloncode web highlight.js 由 cdn 引用，改为本地引用（快多了）
+* 优化 soloncode 启动时文件发现扫描改为异步（快多了）
+* 细节优化
+
+### v2026.6.11
+
+* 修复 soloncode web 发送消息时，格式被清的问题
+* 修复 soloncode web 复制“历史消息”时，格式被清的问题
+* 修复 soloncode web 历史记录选对时，格式被清的问题
+* 细节优化
+
+
+### v2026.6.10
+
+* 添加 soloncode web 任务面板（待办事清单）
+* 添加 soloncode web 上下文使用情况实时展示
+* 添加 soloncode web 大语言模型默认设置
+* 添加 soloncode 消盒模式系统内核级支持
+* 优化 soloncode ConfigTalent 引导词和参数校验
+* 优化 soloncode 上下文压缩算法（增加 tool 计数）
+* 细节优化
+
+
+### v2026.6.9
+
+* 优化 soloncode web json 输出时间段格式
+* 优化 soloncode 沙盒模式（减少误伤）
+* 修复 soloncode web 设置/大模型检测失败的问题（有些模型需要有 user-agent）
+* 修复 soloncode 首次自动添加 npx mcp 后，工具加载失败的问题（超时了）
+* 细节优化
+
+### v2026.6.8
+
+* 新增 soloncode 通过提示词自动添加 config 的支持
+* 优化 soloncode web 设置体验细节
+* 重构 soloncode 沙盒模式
+* 修复 soloncode 因 mcp, openapi 配置错误而无法启动的问题
+* 细节优化
+
+### v2026.6.6
+
+* 添加 soloncode web 文件树 tooltip
+* 优化 soloncode web 设置添加模型时，对话框架模型同步刷新
+* 优化 soloncode web 设置作用域选择框样式
+* 优化 soloncode web 设置 LSP 样式
+* 优化 soloncode web 设置 挂截 样式
+* 优化 soloncode OpenAI Responses 接口兼容性
+* 优化 soloncode 压缩算法
+* 细节优化
+
+### v2026.6.5
+
+* 添加 soloncode web 专门的 trace 显示块
+* 添加 soloncode web lsp 管理能力
+* 添加 soloncode web 更多通用设置
+* 添加 soloncode web 设置 “作用域” 权念（有效结合，全局设置和工作区设置）
+* 优化 soloncode web 代码语法高亮看不清的问题（改成了浅底色）
+* 优化 soloncode web 挂载点编辑逻辑
+* 修复 soloncode web 历史对话里没有代码语法高亮的问题
+* 修复 soloncode web 模型列表为空时仍尝试获取选中模型导致的逻辑问题
+* 细节优化
+
+### v2026.6.3
+
+* 添加 soloncode web 通用设置“重试策略”功能
+* 添加 soloncode web 技能市场“安装到”功能（可选择技能池）
+* 添加 soloncode web 技能市场点击查看详情的功能
+* 添加 soloncode web 挂载点击内容查看目录的功能
+* 添加 soloncode web 挂载启用开关
+* 添加 soloncode mcp 服务器权限控制（禁用工具）
+* 添加 soloncode openapi 服务器权限控制（禁用工具）
+* 优化 soloncode mcp 协议兼容性（兼容更多非规范协议）
+* 优化 soloncode 上下文压缩算法
+* 细节优化
+
+### v2026.5.31
+
+* 添加 soloncode web 挂载池管理
+* 添加 soloncode web 技能市场安装到（挂载池）选择功能
+* 优化 soloncode web 设置面板样式
+* 调整 soloncode 技能标识由 aliasPath 统一改为 name，并优化技能池加载逻辑及代码格式
+* 修复 soloncode 压缩后可能会引起 ToolMessage 无法对齐的问题
+* 细节优化
+
+### v2026.5.30
+
+* 添加 soloncode web 对话 “历史” 功能（复用，定位）
+* 添加 soloncode web 审查 “生成摘要” 功能
+* 添加 soloncode web 设置/大语言模型 配置功能
+* 添加 soloncode web 设置/技能市场 功能（查找、安装）
+* 添加 soloncode web 设置/MCP 服务器 配置功能
+* 添加 soloncode web 设置/OpenApi 服务器 配置功能
+* 细节优化
+
+### v2026.5.26
+
+* 优化 soloncode ActionTask 增加原子性（避免单工具失败时，影响整个工作记忆）
+* 优化 soloncode skill 提示加去重处理
+* 细节优化
+
+### v2026.5.22
+
+* 优化 soloncode mcp 兼容性（有些 mcp server 不完全按 mcp 规范来）
+* 升级 mcp sdk 到 v1.1.3
+
+### v2026.5.21
+
+* 添加 soloncode web 文件查看与复制功能
+* 添加 soloncode web 文件搜索功能
+* 添加 soloncode web 右侧面板的拖动功能
+* 添加 soloncode web 技能提示
+* 添加 soloncode cli 技能提示
+
+### v2026.5.20
+
+* 添加 soloncode web 文件树功能（方便知道有哪些文件）
+* 添加 soloncode web git diff 功能
+
+### v2026.5.19
+
+* 优化 soloncode 压缩时机和压缩算法
+* 优化 soloncode edit 组合权限控制
+* 细节优化
+
+
+### v2026.5.15
+
+* 修复 soloncode llm 返空重试的可能卡死问题
+* 细节优化
+
+### v2026.5.13
+
+* 修复 soloncode WebfetchTool 超时失效造成卡死的问题
+* 细节优化
+
+### v2026.5.12
+
+* 优化 soloncode web 飞书绑定
+* 优化 soloncode web 钉钉绑定
+* 优化 soloncode ReActAgent 架构（由计算图改为更简单的 while）
+* 细节优化
+
+### v2026.5.11
+
+* 新增 soloncode web 飞书链接
+* 新增 soloncode web 钉钉链接
+* 添加 soloncode 时间显示
+* 优化 soloncode web 微信链接体验
+* 修复 soloncode web loop 任务失效的问题（只运行了一次）
+* 细节优化
+
+### v2026.5.9
+
+* 添加 soloncode `/rewind` 命令（对话回退）
+* 添加 soloncode web （输入框空时）上下键选历史任务功能
+* 添加 soloncode web 微信通道命令支持
+* 添加 soloncode web icon
+* 调整 soloncode 心智记忆改为 md 文件保存（之前的会失效）
+* 调整 soloncode web 改用 websocket 统一输出
+* 修复 soloncode web `/loop` 任务没有用会话选中模型的问题
+* 细节优化
+
+### v2026.5.6
+
+* 新增 soloncode web 微信接入
+* 添加 soloncode `/loop` cron 表达式支持
+* 优化 soloncode acp 输出
+
+```
+/loop cron:'0 */5 * * * ?' check status
+```
+
+### v2026.5.5
+
+* 优化 soloncode 启动打印（非 cli 模式，改用 err 通道打印）
+* acp-sdk 升为 0.11.0
+
+### v2026.5.4
+
+* 优化 soloncode cli 思考转为灰色
+* 优化 soloncode web 取消 thymeleaf 依赖包（缩减 2.5Mb）
+* 修复 soloncode mac 安装时，会不断添加新的环境配置记录
+* 修复 soloncode 执行恢复命令会出错的问题（v2026.5.3 时出现）
+
 ### v2026.5.3
 
 * 添加 soloncode `@agent` 功能

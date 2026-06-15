@@ -8,6 +8,7 @@ export interface DbMessage {
   role: string;
   timestamp: string;
   contents: string;
+  workspacePath?: string;
 }
 
 export interface DbConversation {
@@ -17,7 +18,20 @@ export interface DbConversation {
   status: string;
   isPermanent?: boolean;
   icon?: string;
+  workspacePath?: string; // 关联的项目路径
 }
+
+// ==================== 项目 ====================
+
+export interface DbProject {
+  id: string;        // workspace path (natural key)
+  name: string;      // 文件夹名称
+  sortOrder: number;
+  addedAt: string;   // ISO timestamp
+}
+
+/** 未关联项目的特殊标记 */
+export const UNLINKED_PROJECT = '__unlinked__';
 
 // ==================== 设置相关表 ====================
 
@@ -82,6 +96,7 @@ class SolonCodeDatabase extends Dexie {
   mcpServers!: Table<DbMcpServer>;
   skills!: Table<DbSkill>;
   agents!: Table<DbAgent>;
+  projects!: Table<DbProject>;
 
   constructor() {
     super('SolonCodeDB');
@@ -100,10 +115,30 @@ class SolonCodeDatabase extends Dexie {
     this.version(5).stores({
       agents: '++id, name, enabled, source, sortOrder',
     });
+    // v6: 新增 projects 表，conversations 加 workspacePath 索引
+    this.version(6).stores({
+      projects: 'id, name, sortOrder',
+      conversations: '++id, title, timestamp, status, workspacePath',
+    });
+    // v7: messages 加 workspacePath 索引
+    this.version(7).stores({
+      messages: '++id, conversationId, timestamp, workspacePath',
+    });
   }
 }
 
 export const db = new SolonCodeDatabase();
+
+// ==================== 迁移：将现有会话关联到项目 ====================
+
+export async function migrateConversationsToProjects(): Promise<void> {
+  const setting = await db.globalSettings.get('projectsMigrated');
+  if (setting) return;
+  await db.conversations
+    .filter(c => !c.workspacePath)
+    .modify({ workspacePath: UNLINKED_PROJECT });
+  await db.globalSettings.put({ key: 'projectsMigrated', value: 'true' });
+}
 
 // ==================== 消息 ====================
 
@@ -111,11 +146,45 @@ export async function saveMessage(message: Omit<DbMessage, 'id'>): Promise<numbe
   return await db.messages.add(message);
 }
 
-export async function getMessagesByConversation(conversationId: string | number): Promise<DbMessage[]> {
+export async function reassignMessages(oldConvId: string | number, newConvId: string | number): Promise<void> {
+  const numId = typeof oldConvId === 'string' ? parseInt(oldConvId, 10) : oldConvId;
+  const ids = isNaN(numId) ? [oldConvId] : [oldConvId, numId];
+  await db.messages
+    .where('conversationId')
+    .anyOf(ids)
+    .modify({ conversationId: newConvId });
+}
+
+export async function getMessagesByConversation(
+  conversationId: string | number,
+  limit?: number,
+  offset?: number,
+): Promise<DbMessage[]> {
+  // 同时匹配 string 和 number 类型的 conversationId
+  const numId = typeof conversationId === 'string' ? parseInt(conversationId, 10) : conversationId;
+  const ids = isNaN(numId) ? [conversationId] : [conversationId, numId];
+  let collection = db.messages
+    .where('conversationId')
+    .anyOf(ids);
+
+  if (offset) {
+    collection = collection.offset(offset);
+  }
+  if (limit) {
+    collection = collection.limit(limit);
+  }
+
+  return await collection.toArray();
+}
+
+/** 获取会话的消息总数 */
+export async function getMessageCount(conversationId: string | number): Promise<number> {
+  const numId = typeof conversationId === 'string' ? parseInt(conversationId, 10) : conversationId;
+  const ids = isNaN(numId) ? [conversationId] : [conversationId, numId];
   return await db.messages
     .where('conversationId')
-    .equals(conversationId)
-    .toArray();
+    .anyOf(ids)
+    .count();
 }
 
 export async function saveConversation(conversation: DbConversation): Promise<number> {
@@ -127,17 +196,38 @@ export async function saveConversation(conversation: DbConversation): Promise<nu
   return newId;
 }
 
-export async function getAllConversations(): Promise<DbConversation[]> {
+export async function getAllConversations(workspacePath?: string): Promise<DbConversation[]> {
+  if (workspacePath) {
+    return await db.conversations.where('workspacePath').equals(workspacePath).reverse().sortBy('timestamp');
+  }
   return await db.conversations.toArray();
 }
 
 export async function deleteConversation(id: string | number): Promise<void> {
-  await db.messages.where('conversationId').equals(id).delete();
-  await db.conversations.where('id').equals(id).delete();
+  const numId = typeof id === 'string' ? parseInt(id, 10) : id;
+  if (isNaN(numId)) return;
+  await db.messages.where('conversationId').anyOf([id, numId]).delete();
+  await db.conversations.delete(numId);
 }
 
 export async function updateConversation(id: string | number, updates: Partial<DbConversation>): Promise<void> {
-  await db.conversations.where('id').equals(id).modify(updates);
+  const numId = typeof id === 'string' ? parseInt(id, 10) : id;
+  if (isNaN(numId)) return;
+  await db.conversations.update(numId, updates);
+}
+
+// ==================== 项目 CRUD ====================
+
+export async function getAllProjects(): Promise<DbProject[]> {
+  return await db.projects.orderBy('sortOrder').toArray();
+}
+
+export async function addProject(project: DbProject): Promise<void> {
+  await db.projects.put(project);
+}
+
+export async function removeProject(id: string): Promise<void> {
+  await db.projects.delete(id);
 }
 
 // ==================== 全局设置（键值对） ====================
@@ -164,6 +254,16 @@ export async function saveLastFolder(folderPath: string): Promise<void> {
 /** 读取最后打开的工作区文件夹 */
 export async function loadLastFolder(): Promise<string | null> {
   return await getSetting<string | null>('lastFolder', null);
+}
+
+/** 保存最后活跃项目路径 */
+export async function saveLastActiveProject(path: string): Promise<void> {
+  await setSetting('lastActiveProject', path);
+}
+
+/** 读取最后活跃项目路径 */
+export async function loadLastActiveProject(): Promise<string | null> {
+  return await getSetting<string | null>('lastActiveProject', null);
 }
 
 /** 保存工作区对应的最后会话 ID */

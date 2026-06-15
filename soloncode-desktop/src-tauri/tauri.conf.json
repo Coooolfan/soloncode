@@ -4,22 +4,22 @@
   "version": "0.1.0",
   "identifier": "site.sorghum.soloncode-desktop",
   "build": {
-    "beforeDevCommand": "pnpm dev",
+    "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:5173",
-    "beforeBuildCommand": "node check-jar.cjs && pnpm build",
+    "beforeBuildCommand": "npm run build",
     "frontendDist": "../dist"
   },
   "app": {
     "windows": [
       {
         "title": "SolonCode",
-        "width": 800,
-        "height": 600,
+        "width": 1280,
+        "height": 800,
         "decorations": false
       }
     ],
     "security": {
-      "csp": null
+      "csp": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' ws://localhost:* http://localhost:*"
     }
   },
   "bundle": {
@@ -32,10 +32,11 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "resources": [
-      "release/**/*",
-      "target/soloncode-cli.jar",
-      "build/install-cli.*"
-    ]
+    "windows": {
+      "nsis": {
+        "installerIcon": "icons/icon.ico"
+      }
+    },
+    "resources": []
   }
 }

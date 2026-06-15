@@ -1,7 +1,7 @@
 <div align="center">
 <h1>SolonCode</h1>
 <p>Відкритий кодувальний агент, побудований на <a href="https://github.com/opensolon/solon-ai">Solon AI</a> та Java (підтримує середовища виконання Java8 до Java26)</p>
-<p>Остання версія: v2026.5.3</p>
+<p>Остання версія: v2026.6.16</p>
 <img height="260" src="SHOW.png" />
 <img height="260" src="SHOW2.png" />
 </div>
@@ -21,7 +21,7 @@
 Встановлення:
 
 ```bash
-# Mac / Linux:
+# Mac / Linux / Harmony PC:
 curl -fsSL https://solon.noear.org/soloncode/setup.sh | bash
 
 # Windows (PowerShell):
@@ -36,16 +36,28 @@ irm https://solon.noear.org/soloncode/setup.ps1 | iex
 
 ## Запуск
 
-Запустіть команду `soloncode` з будь-якого каталогу в консолі (тобто вашої робочої директорії).
+Запустіть команду `soloncode` (CLI-інтерактивний) або `soloncode web 0` (Web-інтерактивний) з будь-якого каталогу в консолі (тобто вашої робочої директорії).
+
+* `soloncode` (CLI-інтерактивний)
 
 ```bash
 demo@MacBook-Pro ~ % soloncode
-SolonCode v2026.5.3
-/Users/noear
+SolonCode v2026.6.16 PID-74080 Model:deepseek-v4-flash
+/path/demo
 Tips: (esc) interrupt | /(tab) ls command | @(tab) ls agent
 
 User
 > 
+```
+
+* `soloncode web 0` (Web-інтерактивний)
+
+```bash
+demo@MacBook-Pro ~ % soloncode web 0
+SolonCode v2026.6.16 PID-73617 Model:deepseek-v4-flash
+/path/demo
+2026-05-20 09:35
+Web interface: http://localhost:50488/
 ```
 
 Тестування функцій (спробуйте наступні завдання, від простих до складних):
@@ -69,11 +81,12 @@ User
 
 ## Часті питання
 
-У чому різниця від Claude Code та OpenCode?
+У чому різниця від Claude Code?
 
 Вони функціонально схожі, з ключовими відмінностями:
 
-* Побудований на Java, 100% відкритий код.
-* Незалежний від провайдера. Потребує налаштування моделі. Ітерація моделей зменшить розриви та знизить витрати, роблячи підхід незалежності від провайдера важливим.
-* Зосереджений на термінальному інтерфейсі командного рядка (CLI), працює через системні команди.
+* Побудований на Java, 100% відкритий код. Сумісний з BiSheng JDK (Huawei) та Harmony PC.
+* Повністю керується та створюється китайськими промптами
+* Незалежний від провайдера. Налаштовуйте моделі за потребою. Ітерація моделей зменшить розриви та знизить витрати, роблячи гнучке налаштування важливим.
+* Одночасно підтримує термінальний інтерфейс командного рядка (CLI), інтерфейс браузера (WEB) та інтерфейс десктопної IDE (Desktop).
 * Підтримує Web, протокол ACP для віддаленого зв'язку.

@@ -1,7 +1,7 @@
 <div align="center">
 <h1>SolonCode</h1>
 <p>An open-source coding agent built with <a href="https://github.com/opensolon/solon-ai">Solon AI</a> and Java (supports Java8 to Java26 runtime environments)</p>
-<p>Latest Version: 0.1.3</p>
+<p>Fork Version: 0.1.3 · Upstream baseline: v2026.6.16</p>
 <img height="260" src="docs/SHOW.png" />
 <img height="260" src="docs/SHOW2.png" />
 </div>
@@ -16,20 +16,19 @@
 
 </div>
 
-
 ## About This Fork
 
-This fork tracks the upstream [OpenSolon/SolonCode](https://github.com/opensolon/soloncode) project while experimenting with a build and runtime direction focused on Gradle and GraalVM Native Image.
+This fork tracks the upstream [OpenSolon/SolonCode](https://github.com/opensolon/soloncode) project while keeping a Gradle and GraalVM Native Image focused build/runtime direction.
 
 Main differences from upstream:
 
-* **Gradle-first build**: migrated the JVM modules and extension demo from Maven to Gradle 9.4, with JVM 25 as the compile-time and runtime target.
-* **GraalVM Native Image support**: added native-image build wiring and reflection/resource metadata.
-* **Release packaging and CI**: added GitHub Actions for multi-platform CLI native builds, JAR builds, and release archives.
-* **Static Web UI packaging**: moved the Web UI to static resources and removed the Thymeleaf runtime dependency from the CLI module.
-* **Extension support removed**: removed the `solon.extend` user extension loading path.
-* **Fork-specific versioning**: uses its own `0.1.3` version line and disables upstream update checks.
-* **Documentation layout**: keeps the main English README at the repository root and stores localized READMEs and screenshots under `docs/`.
+* **Gradle-first build**: JVM modules and the extension demo are maintained with Gradle 9.4, using JVM 25 as the compile-time and runtime target.
+* **GraalVM Native Image support**: native-image build wiring plus reflection/resource metadata are maintained for the CLI.
+* **Release packaging and CI**: release archives are based on `soloncode-cli/release` and include `config.yml`, `AGENTS.md`, `skills/`, and install scripts.
+* **Static Web UI packaging**: the CLI Web UI is packaged as static resources and does not depend on Thymeleaf.
+* **Extension loading removed**: the `solon.extend` user extension loading path is intentionally disabled in this fork.
+* **Fork-specific versioning**: this branch keeps its `0.1.3` version line and disables upstream update checks.
+* **Documentation layout**: the English README stays at the repository root, while localized READMEs and screenshots are kept under `docs/`.
 
 PRs and Issues are accepted, but this fork does not guarantee fixes or commit to ongoing maintenance.
 
@@ -38,58 +37,54 @@ PRs and Issues are accepted, but this fork does not guarantee fixes or commit to
 Installation:
 
 ```bash
-# Mac / Linux:
+# Mac / Linux / Harmony PC:
 curl -fsSL https://solon.noear.org/soloncode/setup.sh | bash
 
 # Windows (PowerShell):
 irm https://solon.noear.org/soloncode/setup.ps1 | iex
 ```
 
-Configuration (must be modified after installation):
+Configuration:
 
 * Installation directory: `~/soloncode/bin/`
-* Locate the `~/soloncode/config.yml` configuration file and modify the `models` configuration (primarily)
-* For `models` configuration options, refer to: [Model Configuration and Request Options](https://solon.noear.org/article/1087)
+* Locate `~/soloncode/config.yml` and configure `models`
+* For model options, see [Model Configuration and Request Options](https://solon.noear.org/article/1087)
 
 ## Running
 
-Run the `soloncode` command from any directory in the console (i.e., your workspace).
+Run `soloncode` for CLI interactive mode or `soloncode web 0` for Web interactive mode from any workspace directory.
 
 ```bash
 demo@MacBook-Pro ~ % soloncode
-SolonCode 0.1.3
-/Users/noear
-Tips: (esc) interrupt | /(tab) ls command | @(tab) ls agent
+SolonCode 0.1.3 PID-74080 Model:deepseek-v4-flash
+/path/demo
+Tips: (esc) interrupt | /(tab) command | $(tab) skill | @(tab) agent
 
 User
-> 
+>
 ```
 
-Feature Testing (try the following tasks, from simple to complex):
-
-* `你好`
-* `用网络分析下 ai mcp 协议，然后生成个 ppt` // It's recommended to install some skills in advance
-* `帮我设计一个 agent team（设计案存为 demo-dis.md），开发一个 solon + java17 的经典权限管理系统（demo-web），前端用 vue3，界面要简洁好看`
-
+```bash
+demo@MacBook-Pro ~ % soloncode web 0
+SolonCode 0.1.3 PID-73617 Model:deepseek-v4-flash
+/path/demo
+2026-05-20 09:35
+Web interface: http://localhost:50488/
+```
 
 ## Documentation
 
-For more configuration details, please visit our [Official Documentation](https://solon.noear.org/article/soloncode).
+For more configuration details, visit the [Official Documentation](https://solon.noear.org/article/soloncode).
 
 ## Contributing
 
-If you're interested in contributing code, please read the [Contributing Docs](https://solon.noear.org/article/623) before submitting a PR.
+If you're interested in contributing code, read the [Contributing Docs](https://solon.noear.org/article/623) before submitting a PR.
 
-## Developing Based on SolonCode
-
-If you use "soloncode" in your project name (e.g., "soloncode-dashboard" or "soloncode-app"), please indicate in the README that the project is not officially developed by the OpenSolon team and has no affiliation.
-
-## FAQ: What's the difference from Claude Code and OpenCode?
+## FAQ: What's the difference from Claude Code?
 
 They are functionally similar, with key differences:
 
-* Built with Java, 100% open-source.
+* Built with Java, 100% open-source. Compatible with BiSheng JDK (Huawei) and Harmony PC.
 * Pure Chinese prompt-driven development and construction.
-* Provider-agnostic. Requires model configuration. Model iteration will narrow gaps and reduce costs, making provider-agnostic approach important.
-* Focused on terminal command-line interface (CLI), running via system commands.
-* Supports Web, ACP protocol for remote communication.
+* Provider-agnostic. Configure models as needed.
+* Supports terminal CLI, browser Web UI, desktop IDE UI, Web, and ACP remote communication.

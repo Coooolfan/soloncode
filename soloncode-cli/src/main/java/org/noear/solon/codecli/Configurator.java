@@ -1,28 +1,41 @@
 package org.noear.solon.codecli;
 
 import com.agentclientprotocol.sdk.agent.transport.StdioAcpAgentTransport;
-import com.agentclientprotocol.sdk.agent.transport.WebSocketSolonAcpAgentTransport;
 import com.agentclientprotocol.sdk.spec.AcpAgentTransport;
-import io.modelcontextprotocol.json.McpJsonMapper;
 import org.noear.solon.Solon;
 import org.noear.solon.ai.agent.AgentSession;
 import org.noear.solon.ai.agent.AgentSessionProvider;
 import org.noear.solon.ai.agent.session.FileAgentSession;
-import org.noear.solon.ai.chat.ChatConfig;
 import org.noear.solon.ai.harness.HarnessEngine;
 import org.noear.solon.ai.harness.HarnessExtension;
-import org.noear.solon.ai.skills.memory.MemorySkill;
-import org.noear.solon.annotation.*;
+import org.noear.solon.ai.talents.mount.MountDir;
+import org.noear.solon.ai.talents.mount.MountType;
+import org.noear.solon.annotation.Bean;
+import org.noear.solon.annotation.Configuration;
+import org.noear.solon.annotation.Init;
+import org.noear.solon.annotation.Inject;
+import org.noear.solon.codecli.channel.Channel;
 import org.noear.solon.codecli.command.builtin.*;
 import org.noear.solon.codecli.config.AgentFlags;
-import org.noear.solon.codecli.config.AgentProperties;
-import org.noear.solon.codecli.command.builtin.LoopScheduler;
-import org.noear.solon.codecli.memory.MemoryManger;
-import org.noear.solon.codecli.portal.AcpLink;
-import org.noear.solon.codecli.portal.CliShell;
-import org.noear.solon.codecli.portal.WebController;
-import org.noear.solon.codecli.portal.WsGate;
-import org.noear.solon.codecli.provider.ModelProviderFactory;
+import org.noear.solon.codecli.config.AgentSettings;
+import org.noear.solon.codecli.config.ManagerExtension;
+import org.noear.solon.codecli.config.entity.ApiSourceDo;
+import org.noear.solon.codecli.config.entity.LspServerDo;
+import org.noear.solon.codecli.config.entity.McpServerDo;
+import org.noear.solon.codecli.config.entity.ModelDo;
+import org.noear.solon.codecli.config.entity.MountDo;
+import org.noear.solon.codecli.memory.MemoryProvider;
+import org.noear.solon.codecli.portal.WorkspaceWatcher;
+import org.noear.solon.codecli.portal.acp.AcpLink;
+import org.noear.solon.codecli.portal.cli.CliShell;
+import org.noear.solon.codecli.portal.desktop.WsController;
+import org.noear.solon.codecli.portal.desktop.WsGate;
+import org.noear.solon.codecli.portal.desktop.provider.ModelProviderFactory;
+import org.noear.solon.codecli.portal.web.WebChannel;
+import org.noear.solon.codecli.portal.web.WebController;
+import org.noear.solon.codecli.portal.web.WebGate;
+import org.noear.solon.codecli.portal.web.WebSettingsController;
+import org.noear.solon.codecli.portal.web.WebStreamBuilder;
 import org.noear.solon.core.AppContext;
 import org.noear.solon.core.BeanWrap;
 import org.noear.solon.core.util.JavaUtil;
@@ -31,7 +44,11 @@ import org.noear.solon.net.websocket.WebSocketRouter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -46,10 +63,13 @@ public class Configurator {
     private static final String SOLON_AOT_PROCESSING = "solon.aot.processing";
 
     @Inject
+    AppContext appContext;
+
+    @Inject
     HarnessEngine agentRuntime;
 
     @Inject
-    AgentProperties agentProps;
+    AgentSettings agentSettings;
 
     @Inject
     ModelProviderFactory modelProviderFactory;
@@ -57,63 +77,102 @@ public class Configurator {
     private LoopScheduler loopScheduler;
 
     @Bean
-    public HarnessEngine agentRuntime(AppContext context, AgentProperties props) {
-        props.getSkillPools().put("@global", Paths.get(props.getUserHome(), props.getHarnessSkills()).toString());
-        props.getSkillPools().put("@local", Paths.get(props.getWorkspace(), props.getHarnessSkills()).toString());
-
-
-        // https://skillhub.cn/
-        props.getSkillPools().put("@skills", Paths.get(props.getWorkspace(), "skills").toString());
-        props.getSkillPools().put("@skillhub", Paths.get(props.getUserHome(), ".skillhub/skills/").toString());
-
-        // https://skills.sh/
-        props.getSkillPools().put("@agents_skills", Paths.get(props.getUserHome(), ".agents/skills/").toString());
-
-        props.getSkillPools().put("@opencode_skills", Paths.get(props.getWorkspace(), props.OPENCODE_SKILLS).toString());
-        props.getSkillPools().put("@claude_skills", Paths.get(props.getWorkspace(), props.CLAUDE_SKILLS).toString());
-
-        props.getAgentPools().add(Paths.get(props.getUserHome(), props.getHarnessAgents()).toString()); //global
-        props.getAgentPools().add(Paths.get(props.getWorkspace(), props.getHarnessAgents()).toString()); //local
-
-
-
+    public HarnessEngine agentRuntime(AgentSettings settings) throws Exception {
+        String workspace = AgentFlags.getUserDir();
         Map<String, AgentSession> sessionMap = new ConcurrentHashMap<>();
 
-        // 会话数据存到全局目录 ~/.soloncode/sessions/<sessionId>/
         AgentSessionProvider sessionProvider = (sessionId) -> sessionMap.computeIfAbsent(sessionId, key ->
-                new FileAgentSession(key, Paths.get(props.getWorkspace(), props.getHarnessSessions()).resolve(key).normalize().toFile().toString()));
+                new FileAgentSession(key, Paths.get(workspace, AgentFlags.getHarnessSessions()).resolve(key).normalize().toFile().toString()));
 
-        //订阅容器扩展
-        context.subBeansOfType(HarnessExtension.class, extension -> {
-            props.addExtension(extension);
-        });
+        ensureAotModel(settings);
 
-        //添加记忆能力
-        MemorySkill memorySkill = new MemorySkill(new MemoryManger(agentProps)).sessionIsolation(false);
-        props.addExtension((agentName, agentBuilder) -> {
-            if("main".equals(agentName)){
-                agentBuilder.defaultSkillAdd(memorySkill);
-            }
-        });
-
-        ensureAotModel(props);
-
-        HarnessEngine engine = HarnessEngine.of(props)
+        HarnessEngine engine = HarnessEngine.of(workspace, AgentFlags.getHarnessHome())
+                .userAgent(settings.getGeneral().getUserAgent())
+                .systemPrompt(AgentFlags.getAgentsMd())
+                .maxTurns(settings.getGeneral().getMaxTurns())
+                .autoRethink(settings.getGeneral().getAutoRethink())
+                .sessionWindowSize(settings.getGeneral().getSessionWindowSize())
                 .sessionProvider(sessionProvider)
+                .compressionThreshold(settings.getGeneral().getSummaryWindowSize(), settings.getGeneral().getSummaryWindowToken())
+                .compressionModel(settings.getGeneral().getSummaryModel())
+                .memoryEnabled(settings.getGeneral().getMemoryEnabled())
+                .memorySolution(new MemoryProvider(agentSettings))
+                .sandboxEnabled(settings.getGeneral().getSandboxMode())
+                .sandboxAllowUserHome(settings.getGeneral().getSandboxAllowUserHome())
+                .sandboxSystemRestrict(settings.getGeneral().getSandboxSystemRestrict())
+                .bashAsyncEnabled(settings.getGeneral().getBashAsyncEnabled())
+                .subagentEnabled(settings.getGeneral().getSubagentEnabled())
+                .hitlEnabled(settings.getGeneral().getHitlEnabled())
+                .apiRetries(settings.getGeneral().getApiRetries())
+                .modelRetries(settings.getGeneral().getModelRetries())
+                .mcpRetries(settings.getGeneral().getModelRetries())
+                .toolsAdd(settings.getPermission().getTools())
+                .disallowedToolsAdd(settings.getPermission().getDisallowedTools())
                 .build();
 
-        engine.getCommandRegistry().load(Paths.get(AgentProperties.getUserHome(), props.getHarnessCommands()));
-        engine.getCommandRegistry().load(Paths.get(agentProps.getWorkspace(), props.getHarnessCommands()));
+        engine.setDefaultModel(settings.getDefaultModel());
+        for (ModelDo model : agentSettings.getModels().values()) {
+            engine.addModel(model);
+        }
 
+        for (Map.Entry<String, MountDo> entry : agentSettings.getMountPools().entrySet()) {
+            MountDo mount = entry.getValue();
+            engine.addMount(MountDir.builder()
+                    .alias(entry.getKey())
+                    .description(mount.getDescription())
+                    .type(mount.getType())
+                    .path(mount.getPath())
+                    .primary(mount.isPrimary())
+                    .enabled(mount.isEnabled())
+                    .writeable(mount.isWriteable())
+                    .build());
+        }
+
+        engine.addMount(MountDir.builder().alias("@global-skills").type(MountType.SKILLS).path("~/" + engine.getHarnessSkills()).primary(true).build());
+        engine.addMount(MountDir.builder().alias("@workspace-skills").type(MountType.SKILLS).path("./" + engine.getHarnessSkills()).primary(true).build());
+        engine.addMount(MountDir.builder().alias("@global-agents").type(MountType.AGENTS).path("~/" + engine.getHarnessAgents()).primary(true).build());
+        engine.addMount(MountDir.builder().alias("@workspace-agents").type(MountType.AGENTS).path("./" + engine.getHarnessAgents()).primary(true).build());
+
+        for (Map.Entry<String, McpServerDo> entry : agentSettings.getMcpServers().entrySet()) {
+            engine.addMcpServer(entry.getKey(), entry.getValue());
+        }
+        for (Map.Entry<String, ApiSourceDo> entry : agentSettings.getApiServers().entrySet()) {
+            engine.addApiServer(entry.getValue());
+        }
+        for (Map.Entry<String, LspServerDo> entry : agentSettings.getLspServers().entrySet()) {
+            engine.addLspServer(entry.getKey(), entry.getValue());
+        }
+
+        addSystemLspServer(engine, agentSettings, "java", Arrays.asList("jdtls"), Arrays.asList(".java"));
+        addSystemLspServer(engine, agentSettings, "typescript", Arrays.asList("typescript-language-server", "--stdio"), Arrays.asList(".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".mts", ".cts"));
+        addSystemLspServer(engine, agentSettings, "go", Arrays.asList("gopls"), Arrays.asList(".go"));
+        addSystemLspServer(engine, agentSettings, "python", Arrays.asList("pyright-langserver", "--stdio"), Arrays.asList(".py", ".pyi"));
+        addSystemLspServer(engine, agentSettings, "rust", Arrays.asList("rust-analyzer"), Arrays.asList(".rs"));
+        addSystemLspServer(engine, agentSettings, "c-cpp", Arrays.asList("clangd", "--background-index", "--clang-tidy"), Arrays.asList(".c", ".h", ".cpp", ".hpp", ".cc", ".cxx", ".hxx", ".c++", ".h++", ".hh"));
+        addSystemLspServer(engine, agentSettings, "csharp", Arrays.asList("roslyn-language-server", "--stdio", "--autoLoadProjects"), Arrays.asList(".cs", ".csx"));
+        addSystemLspServer(engine, agentSettings, "ruby", Arrays.asList("solargraph", "stdio"), Arrays.asList(".rb", ".rake", ".gemspec", ".ru"));
+        addSystemLspServer(engine, agentSettings, "php", Arrays.asList("intelephense", "--stdio"), Arrays.asList(".php"));
+        addSystemLspServer(engine, agentSettings, "bash", Arrays.asList("bash-language-server", "start"), Arrays.asList(".sh", ".bash", ".zsh", ".ksh"));
+        addSystemLspServer(engine, agentSettings, "lua", Arrays.asList("lua-language-server"), Arrays.asList(".lua"));
+        addSystemLspServer(engine, agentSettings, "dart", Arrays.asList("dart", "language-server", "--lsp"), Arrays.asList(".dart"));
+        addSystemLspServer(engine, agentSettings, "swift", Arrays.asList("sourcekit-lsp"), Arrays.asList(".swift", ".objc", ".objcpp"));
+        addSystemLspServer(engine, agentSettings, "kotlin", Arrays.asList("kotlin-language-server"), Arrays.asList(".kt", ".kts"));
+        addSystemLspServer(engine, agentSettings, "yaml", Arrays.asList("yaml-language-server", "--stdio"), Arrays.asList(".yaml", ".yml"));
+
+        engine.getCommandRegistry().load(Paths.get(AgentFlags.getUserHome(), engine.getHarnessCommands()));
+        engine.getCommandRegistry().load(Paths.get(workspace, engine.getHarnessCommands()));
         engine.getCommandRegistry().register(new ExitCommand());
         engine.getCommandRegistry().register(new ClearCommand());
         engine.getCommandRegistry().register(new ResumeCommand());
+        engine.getCommandRegistry().register(new RewindCommand());
         engine.getCommandRegistry().register(new ModelCommand());
 
-        // loop scheduler
-        this.loopScheduler = new LoopScheduler();
+        engine.getLspTalent().setEnabled(settings.getGeneral().getLspEnabled());
+
+        this.loopScheduler = new LoopScheduler(engine, AgentFlags.getHarnessLoopWorktrees());
         engine.getCommandRegistry().register(new LoopCommand(loopScheduler));
 
+        engine.addExtension(new ManagerExtension(engine, agentSettings));
         return engine;
     }
 
@@ -123,10 +182,47 @@ public class Configurator {
             return;
         }
 
-        CliShell cliShell = new CliShell(agentRuntime, agentProps, loopScheduler);
+        appContext.subBeansOfType(HarnessExtension.class, extension -> agentRuntime.addExtension(extension));
 
-        if (agentProps.isCheckUpdate() && AgentFlags.checkUpdate()) {
-            // 使用颜色代码让提示更醒目
+        CliShell cliShell = new CliShell(agentRuntime, agentSettings, loopScheduler);
+        String flag = Solon.cfg().argx().flagAt(0);
+
+        if (AgentFlags.FLAG_VERSION.equals(flag)) {
+            System.out.println(Solon.cfg().appTitle() + " " + AgentFlags.getVersion());
+            return;
+        }
+
+        checkUpdate();
+
+        if (Solon.cfg().argx().flags().size() > 0) {
+            if (AgentFlags.FLAG_RUN.equals(flag)) {
+                String prompt = Solon.cfg().argx().flagAt(1);
+                new CliShell(agentRuntime, agentSettings, null).call(prompt);
+                Solon.stop();
+                return;
+            }
+
+            if (AgentFlags.FLAG_SERVE.equals(flag)) {
+                runServe(agentRuntime, agentSettings, cliShell);
+                return;
+            }
+
+            if (AgentFlags.FLAG_WEB.equals(flag)) {
+                runWeb(agentRuntime, agentSettings, cliShell);
+                return;
+            }
+
+            if (AgentFlags.FLAG_ACP.equals(flag)) {
+                runAcp(agentRuntime, agentSettings, cliShell);
+                return;
+            }
+        }
+
+        new Thread(cliShell, "CLI-Interactive-Thread").start();
+    }
+
+    private void checkUpdate() {
+        if (AgentFlags.checkUpdate()) {
             System.out.println("\033[33mDiscover the new version: " + AgentFlags.getLastVersion() + "\033[0m");
 
             if (JavaUtil.IS_WINDOWS) {
@@ -136,70 +232,56 @@ public class Configurator {
             }
             System.out.println();
         }
-
-        //flag
-        if (Solon.cfg().argx().flags().size() > 0) {
-            String flag = Solon.cfg().argx().flagAt(0);
-
-            if (AgentFlags.FLAG_RUN.equals(flag)) { // java -jar soloncode.jar run '你好' // soloncode run '你好'
-                //单次任务态
-                String prompt = Solon.cfg().argx().flagAt(1);
-                new CliShell(agentRuntime, agentProps, null).call(prompt);
-                Solon.stop();
-                return;
-            }
-
-            if (AgentFlags.FLAG_SERVE.equals(flag)) { // java -jar soloncode.jar server // soloncode server
-                runWeb(agentRuntime, agentProps, null);
-                runAcp(agentRuntime, agentProps, null);
-
-                cliShell.printWelcome("Server port: " + Solon.cfg().serverPort());
-                return;
-            }
-
-            if (AgentFlags.FLAG_WEB.equals(flag)) { // java -jar soloncode.jar web // soloncode web
-                runWeb(agentRuntime, agentProps, cliShell);
-                return;
-            }
-
-            if (AgentFlags.FLAG_ACP.equals(flag)) { // java -jar soloncode.jar acp // soloncode acp
-                runAcp(agentRuntime, agentProps, cliShell);
-                return;
-            }
-
-            //未来可以支持更多控制标记
-        }
-
-
-        //cli - default
-        new Thread(cliShell, "CLI-Interactive-Thread").start();
     }
 
-    private static void ensureAotModel(AgentProperties props) {
-        if (isAotProcessing() == false || props.getModels().isEmpty() == false) {
-            return;
-        }
+    private void runServe(HarnessEngine agentRuntime, AgentSettings settings, CliShell cliShell) {
+        WebSocketRouter.getInstance().of("/ws", new WsGate(agentRuntime, settings));
 
-        ChatConfig config = new ChatConfig();
-        config.setName("aot-placeholder");
-        config.setProvider("openai");
-        config.setApiUrl("http://127.0.0.1/v1/chat/completions");
-        config.setApiKey("aot-placeholder");
-        config.setModel("aot-placeholder");
-        props.addModel(config);
-    }
-
-    private static boolean isAotProcessing() {
-        return Boolean.getBoolean(SOLON_AOT_PROCESSING);
-    }
-
-
-    private void runWeb(HarnessEngine agentRuntime, AgentProperties agentProps, CliShell cliShell) {
-        //ws
-        WebSocketRouter.getInstance().of(agentProps.getWsEndpoint(), new WsGate(agentRuntime, agentProps));
-        //web
-        BeanWrap webBean = Solon.context().wrapAndPut(WebController.class, new WebController(agentRuntime, loopScheduler, modelProviderFactory));
+        BeanWrap webBean = Solon.context().wrapAndPut(WsController.class, new WsController(agentRuntime, modelProviderFactory));
         Solon.app().router().add(webBean);
+
+        WebGate webGate = new WebGate(agentRuntime);
+        WebStreamBuilder streamBuilder = new WebStreamBuilder(agentRuntime);
+        WebChannel webChannel = new WebChannel(agentRuntime, webGate);
+        for (Channel ch : Collections.singletonList(webChannel.getWeChatLink())) {
+            streamBuilder.bind(ch);
+        }
+        streamBuilder.bind(webChannel.getFeishuLink());
+        streamBuilder.bind(webChannel.getDingTalkLink());
+        BeanWrap channelBean = Solon.context().wrapAndPut(WebChannel.class, webChannel);
+        Solon.app().router().add(channelBean);
+        RunUtil.async(webChannel);
+
+        WebSettingsController settingsController = new WebSettingsController(agentRuntime, settings);
+        BeanWrap webSettingsController = Solon.context().wrapAndPut(WebSettingsController.class, settingsController);
+        Solon.app().router().add(webSettingsController);
+
+        cliShell.printWelcome("Server port: " + Solon.cfg().serverPort());
+    }
+
+    private void runWeb(HarnessEngine agentRuntime, AgentSettings settings, CliShell cliShell) {
+        WebGate webGate = new WebGate(agentRuntime);
+        WebSocketRouter.getInstance().of("/web/gate", webGate);
+
+        BeanWrap webController = Solon.context().wrapAndPut(WebController.class, new WebController(agentRuntime, webGate, loopScheduler));
+        Solon.app().router().add(webController);
+
+        WebSettingsController settingsController = new WebSettingsController(agentRuntime, settings);
+        BeanWrap webSettingsController = Solon.context().wrapAndPut(WebSettingsController.class, settingsController);
+        Solon.app().router().add(webSettingsController);
+
+        BeanWrap webChannel = Solon.context().wrapAndPut(WebChannel.class, new WebChannel(agentRuntime, webGate));
+        Solon.app().router().add(webChannel);
+        RunUtil.async((Runnable) webChannel.get());
+
+        try {
+            Path workspacePath = Paths.get(agentRuntime.getWorkspace()).toAbsolutePath().normalize();
+            WorkspaceWatcher workspaceWatcher = new WorkspaceWatcher(workspacePath);
+            workspaceWatcher.addBroadcastHandler(webGate::broadcastRaw);
+            workspaceWatcher.start();
+        } catch (Exception e) {
+            LOG.warn("Workspace watcher failed: {}", e.getMessage());
+        }
 
         if (cliShell == null) {
             return;
@@ -210,7 +292,6 @@ public class Configurator {
                 Thread.sleep(500);
 
                 String url = "http://localhost:" + Solon.cfg().serverPort() + "/";
-
                 if (JavaUtil.IS_WINDOWS) {
                     new ProcessBuilder("cmd", "/c", "start", url.replace("&", "^&")).start();
                 } else if (JavaUtil.IS_MAC) {
@@ -218,31 +299,49 @@ public class Configurator {
                 } else {
                     new ProcessBuilder("xdg-open", url).start();
                 }
-
-                if (cliShell != null) {
-                    cliShell.printWelcome("Web interface: " + url);
-                }
-            } catch (Throwable e) { // 使用 Throwable 捕获更全面
+                cliShell.printWelcome("Web interface: " + url);
+            } catch (Throwable e) {
                 LOG.warn("Failed to open browser: {}", e.getMessage());
             }
         });
     }
 
+    private void runAcp(HarnessEngine agentRuntime, AgentSettings settings, CliShell cliShell) {
+        AcpAgentTransport agentTransport = new StdioAcpAgentTransport();
+        new AcpLink(agentRuntime, agentTransport, settings).run();
+    }
 
-    private void runAcp(HarnessEngine agentRuntime, AgentProperties agentProps, CliShell cliShell) {
-        AcpAgentTransport agentTransport;
-        if ("stdio".equals(agentProps.getAcpTransport())) {
-            agentTransport = new StdioAcpAgentTransport();
-        } else {
-            agentTransport = new WebSocketSolonAcpAgentTransport(
-                    agentProps.getAcpTransport(), McpJsonMapper.getDefault());
+    private static boolean isAotProcessing() {
+        return Boolean.getBoolean(SOLON_AOT_PROCESSING);
+    }
+
+    private static void ensureAotModel(AgentSettings settings) {
+        if (isAotProcessing() == false || settings.getModels().isEmpty() == false) {
+            return;
         }
 
-        new AcpLink(agentRuntime, agentTransport, agentProps).run();
+        ModelDo model = new ModelDo();
+        model.setName("aot-placeholder");
+        model.setProvider("openai");
+        model.setApiUrl("http://127.0.0.1/v1/chat/completions");
+        model.setApiKey("aot-placeholder");
+        model.setModel("aot-placeholder");
+        settings.getModels().put(model.getNameOrModel(), model);
+        settings.setDefaultModel(model.getNameOrModel());
+    }
 
-        if (cliShell != null) {
-            String url = "ws://localhost:" + Solon.cfg().serverPort() + "/acp";
-            cliShell.printWelcome("Acp interface: " + url);
+    private void addSystemLspServer(HarnessEngine engine, AgentSettings settings, String name, List<String> command, List<String> extensions) {
+        if (settings.getLspServers().containsKey(name)) {
+            return;
         }
+
+        LspServerDo lspServer = new LspServerDo();
+        lspServer.setCommand(command);
+        lspServer.setExtensions(extensions);
+        lspServer.setEnabled(false);
+        lspServer.setScope(AgentFlags.SCOPE_LOCAL);
+
+        engine.addLspServer(name, lspServer);
+        settings.getLspServers().put(name, lspServer);
     }
 }

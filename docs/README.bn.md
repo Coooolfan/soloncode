@@ -1,7 +1,7 @@
 <div align="center">
 <h1>SolonCode</h1>
 <p><a href="https://github.com/opensolon/solon-ai">Solon AI</a> এবং জাভা দিয়ে তৈরি একটি ওপেন-সোর্স কোডিং এজেন্ট (Java8 থেকে Java26 রানটাইম পরিবেশ সমর্থিত)</p>
-<p>সর্বশেষ সংস্করণ: v2026.5.3</p>
+<p>সর্বশেষ সংস্করণ: v2026.6.16</p>
 <img height="260" src="SHOW.png" />
 <img height="260" src="SHOW2.png" />
 </div>
@@ -21,7 +21,7 @@
 ইনস্টলেশন:
 
 ```bash
-# Mac / Linux:
+# Mac / Linux / Harmony PC:
 curl -fsSL https://solon.noear.org/soloncode/setup.sh | bash
 
 # Windows (PowerShell):
@@ -36,16 +36,28 @@ irm https://solon.noear.org/soloncode/setup.ps1 | iex
 
 ## চলমান
 
-কনসোলে যেকোনো ডিরেক্টরি থেকে `soloncode` কমান্ড চালান (অর্থাৎ, আপনার ওয়ার্কস্পেস)।
+কনসোলে যেকোনো ডিরেক্টরি থেকে `soloncode` (CLI ইন্টারেক্টিভ) অথবা `soloncode web 0` (Web ইন্টারেক্টিভ) কমান্ড চালান (অর্থাৎ, আপনার ওয়ার্কস্পেস)।
+
+* `soloncode` (CLI ইন্টারেক্টিভ)
 
 ```bash
 demo@MacBook-Pro ~ % soloncode
-SolonCode v2026.5.3
-/Users/noear
+SolonCode v2026.6.16 PID-74080 Model:deepseek-v4-flash
+/path/demo
 Tips: (esc) interrupt | /(tab) ls command | @(tab) ls agent
 
 User
 > 
+```
+
+* `soloncode web 0` (Web ইন্টারেক্টিভ)
+
+```bash
+demo@MacBook-Pro ~ % soloncode web 0
+SolonCode v2026.6.16 PID-73617 Model:deepseek-v4-flash
+/path/demo
+2026-05-20 09:35
+Web interface: http://localhost:50488/
 ```
 
 বৈশিষ্ট্য পরীক্ষা (নিম্নলিখিত কাজগুলো চেষ্টা করুন, সহজ থেকে জটিল):
@@ -67,11 +79,12 @@ User
 
 আপনি যদি আপনার প্রকল্পের নামে "soloncode" ব্যবহার করেন (যেমন "soloncode-dashboard" বা "soloncode-app"), তাহলে README-তে উল্লেখ করুন যে প্রকল্পটি OpenSolon টিম দ্বারা আনুষ্ঠানিকভাবে তৈরি নয় এবং এর কোনো সম্পর্ক নেই।
 
-## সচরাচর জিজ্ঞাসা: Claude Code এবং OpenCode থেকে পার্থক্য কী?
+## সচরাচর জিজ্ঞাসা: Claude Code থেকে পার্থক্য কী?
 
 এগুলো কার্যক্ষমতার দিক থেকে অনুরূপ, মূল পার্থক্যগুলো হলো:
 
-* জাভা দিয়ে তৈরি, ১০০% ওপেন-সোর্স।
-* প্রোভাইডার-অজ্ঞেয়বাদী। মডেল কনফিগারেশন প্রয়োজন। মডেল পুনরাবৃত্তি ব্যবধান কমাবে এবং খরচ কমাবে, যা প্রোভাইডার-অজ্ঞেয়বাদী পদ্ধতিকে গুরুত্বপূর্ণ করে তোলে।
-* টার্মিনাল কমান্ড-লাইন ইন্টারফেস (CLI) এ ফোকাস করা, সিস্টেম কমান্ডের মাধ্যমে চালানো হয়।
+* জাভা দিয়ে তৈরি, ১০০% ওপেন-সোর্স। BiSheng JDK (Huawei) এবং Harmony PC এর সাথে সামঞ্জস্যপূর্ণ।
+* সম্পূর্ণ চীনা প্রম্পট দ্বারা পরিচালিত এবং নির্মিত
+* প্রোভাইডার-স্বাধীন। প্রয়োজন অনুযায়ী মডেল কনফিগার করুন। মডেল পুনরাবৃত্তি ব্যবধান কমাবে এবং খরচ কমাবে, যা নমনীয় কনফিগারেশনকে গুরুত্বপূর্ণ করে তোলে।
+* একই সাথে টার্মিনাল কমান্ড-লাইন ইন্টারফেস (CLI), ব্রাউজার ইন্টারফেস (WEB) এবং ডেস্কটপ IDE ইন্টারফেস (Desktop) সমর্থন করে।
 * ওয়েব সমর্থন করে, দূরবর্তী যোগাযোগের জন্য ACP প্রোটোকল।

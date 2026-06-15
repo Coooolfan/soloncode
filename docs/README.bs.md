@@ -1,7 +1,7 @@
 <div align="center">
 <h1>SolonCode</h1>
 <p>SolonCode je open-source kodirajući agent izgrađen s <a href="https://github.com/opensolon/solon-ai">Solon AI</a> i Javom (podržava Java8 do Java26 runtime okruženja)</p>
-<p>Najnovija verzija: v2026.5.3</p>
+<p>Najnovija verzija: v2026.6.16</p>
 <img height="260" src="SHOW.png" />
 <img height="260" src="SHOW2.png" />
 </div>
@@ -21,7 +21,7 @@
 Instalacija:
 
 ```bash
-# Mac / Linux:
+# Mac / Linux / Harmony PC:
 curl -fsSL https://solon.noear.org/soloncode/setup.sh | bash
 
 # Windows (PowerShell):
@@ -36,16 +36,28 @@ Konfiguracija (mora se modificirati nakon instalacije):
 
 ## Pokretanje
 
-Pokrenite naredbu `soloncode` iz bilo kojeg direktorija u konzoli (tj. vaš radni prostor).
+Pokrenite naredbu `soloncode` (CLI interaktivno) ili `soloncode web 0` (Web interaktivno) iz bilo kojeg direktorija u konzoli (tj. vaš radni prostor).
+
+* `soloncode` (CLI interaktivno)
 
 ```bash
 demo@MacBook-Pro ~ % soloncode
-SolonCode v2026.5.3
-/Users/noear
+SolonCode v2026.6.16 PID-74080 Model:deepseek-v4-flash
+/path/demo
 Tips: (esc) interrupt | /(tab) ls command | @(tab) ls agent
 
 User
 > 
+```
+
+* `soloncode web 0` (Web interaktivno)
+
+```bash
+demo@MacBook-Pro ~ % soloncode web 0
+SolonCode v2026.6.16 PID-73617 Model:deepseek-v4-flash
+/path/demo
+2026-05-20 09:35
+Web interface: http://localhost:50488/
 ```
 
 Testiranje funkcija (isprobajte sljedeće zadatke, od jednostavnih do složenih):
@@ -67,11 +79,12 @@ Ako ste zainteresirani za doprinos kodom, molimo pročitajte [Dokumentaciju za d
 
 Ako koristite "soloncode" u nazivu svog projekta (npr. "soloncode-dashboard" ili "soloncode-app"), molimo naznačite u README-u da projekt nije službeno razvijen od strane OpenSolon tima i nema službenu povezanost.
 
-## Često postavljana pitanja: Koja je razlika od Claude Code i OpenCode?
+## Često postavljana pitanja: Koja je razlika od Claude Code?
 
 Oni su funkcionalno slični, sa ključnim razlikama:
 
-* Izgrađen s Javom, 100% open-source.
-* Nezavisan od pružatelja usluga. Zahtijeva konfiguraciju modela. Iteracija modela će smanjiti razlike i troškove, čineći pristup nezavisnim od pružatelja usluga važnim.
-* Fokusiran na terminalski komandni interfejs (CLI), pokretanje putem sistemskih komandi.
+* Izgrađen s Javom, 100% open-source. Kompatibilan s BiSheng JDK (Huawei) i Harmony PC.
+* Potpuno vođen i izgrađen kineskim promptovima
+* Nezavisan od pružatelja usluga. Konfigurišite modele prema potrebi. Iteracija modela će smanjiti razlike i troškove, čineći fleksibilnu konfiguraciju važnom.
+* Istovremeno podržava terminalski komandni interfejs (CLI), interfejs pretraživača (WEB) i desktop IDE interfejs (Desktop).
 * Podržava Web, ACP protokol za udaljenu komunikaciju.

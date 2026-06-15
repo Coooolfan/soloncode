@@ -4,13 +4,16 @@
  * @author bai
  */
 import { Icon } from '../common/Icon';
+import { startWindowDrag } from '../../hooks/useWindowDrag';
 import './StatusBar.css';
+
+export type BackendStatus = 'connecting' | 'connected' | 'disconnected';
 
 export interface StatusBarProps {
   /** 当前 AI 模型名称 */
   model?: string;
-  /** 后端是否已连接 */
-  connected?: boolean;
+  /** 后端连接状态 */
+  backendStatus?: BackendStatus;
   /** Git 分支名 */
   branch?: string;
   /** ahead 数量 */
@@ -31,11 +34,13 @@ export interface StatusBarProps {
   language?: string;
   /** 是否有未保存文件 */
   hasUnsavedChanges?: boolean;
+  /** 重连后端回调 */
+  onReconnect?: () => void;
 }
 
 export function StatusBar({
   model,
-  connected = false,
+  backendStatus = 'disconnected',
   branch,
   ahead = 0,
   behind = 0,
@@ -46,14 +51,18 @@ export function StatusBar({
   encoding = 'UTF-8',
   language,
   hasUnsavedChanges = false,
+  onReconnect,
 }: StatusBarProps) {
   return (
-    <div className="status-bar">
-      <div className="status-left">
+    <div className="status-bar" onMouseDown={startWindowDrag}>
+      <div className="status-left" data-no-drag>
         {/* 后端连接状态 */}
-        <span className="status-item status-connection" title={connected ? '后端已连接' : '后端未连接'}>
-          <span className={`status-connection-dot${connected ? ' connected' : ''}`} />
-          <span>{connected ? '已连接' : '未连接'}</span>
+        <span className={`status-item status-connection${backendStatus === 'disconnected' && onReconnect ? ' clickable' : ''}`} title={
+          backendStatus === 'connected' ? '后端已连接' :
+          backendStatus === 'connecting' ? '正在连接后端...' : '点击重连后端'
+        } onClick={backendStatus === 'disconnected' && onReconnect ? onReconnect : undefined}>
+          <span className={`status-connection-dot${backendStatus === 'connected' ? ' connected' : ''}${backendStatus === 'connecting' ? ' connecting' : ''}`} />
+          <span>{backendStatus === 'connected' ? '已连接' : backendStatus === 'connecting' ? '连接中...' : '连接失败，点击重连'}</span>
         </span>
 
         {/* AI 模型 */}
@@ -83,7 +92,7 @@ export function StatusBar({
         )}
       </div>
 
-      <div className="status-right">
+      <div className="status-right" data-no-drag>
         {/* 问题数量 */}
         {(warningCount > 0 || errorCount > 0) && (
           <span className="status-item status-problems" title={`警告: ${warningCount}, 错误: ${errorCount}`}>

@@ -7,6 +7,7 @@ import './GitPanel.css';
 interface GitPanelProps {
   status: GitStatus;
   cwd?: string;
+  projectName?: string;
   onCommit: (message: string) => Promise<void>;
   onStage: (path: string) => Promise<void>;
   onUnstage: (path: string) => Promise<void>;
@@ -14,6 +15,7 @@ interface GitPanelProps {
   onPull: () => Promise<void>;
   onDiscard: (path: string) => Promise<void>;
   onFileClick: (path: string) => void;
+  onGenerateCommitMessage?: () => Promise<string>;
 }
 
 type FeedbackType = 'success' | 'error' | 'info';
@@ -21,18 +23,21 @@ type FeedbackType = 'success' | 'error' | 'info';
 export function GitPanel({
   status,
   cwd,
+  projectName,
   onCommit,
   onStage,
   onUnstage,
   onPush,
   onPull,
   onDiscard,
-  onFileClick
+  onFileClick,
+  onGenerateCommitMessage
 }: GitPanelProps) {
   const [commitMessage, setCommitMessage] = useState('');
   const [isCommitting, setIsCommitting] = useState(false);
   const [isPushing, setIsPushing] = useState(false);
   const [isPulling, setIsPulling] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
   const [showBranchDropdown, setShowBranchDropdown] = useState(false);
   const [branches, setBranches] = useState<string[]>([]);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
@@ -97,6 +102,19 @@ export function GitPanel({
     }
   }
 
+  async function handleGenerateMessage() {
+    if (!onGenerateCommitMessage || stagedFiles.length === 0) return;
+    setIsGenerating(true);
+    try {
+      const msg = await onGenerateCommitMessage();
+      if (msg) setCommitMessage(msg);
+    } catch (err) {
+      setFeedback({ type: 'error', message: `生成失败: ${err}` });
+    } finally {
+      setIsGenerating(false);
+    }
+  }
+
   async function handlePush() {
     setIsPushing(true);
     try {
@@ -157,7 +175,10 @@ export function GitPanel({
     <div className="git-panel">
       {/* 头部 */}
       <div className="panel-header">
-        <span className="panel-title">源代码管理</span>
+        <div className="panel-title-row">
+          <span className="panel-title">源代码管理</span>
+          {projectName && <span className="panel-project-tag">{projectName}</span>}
+        </div>
         <div className="panel-actions">
           <button className="panel-action" title="推送" onClick={handlePush} disabled={isPushing}>
             <Icon name="push" size={16} />
@@ -224,13 +245,23 @@ export function GitPanel({
           onChange={(e) => setCommitMessage(e.target.value)}
           rows={3}
         />
-        <button
-          className="commit-button"
-          onClick={handleCommit}
-          disabled={isCommitting || !commitMessage.trim() || stagedFiles.length === 0}
-        >
-          {isCommitting ? '提交中...' : `提交 (${stagedFiles.length})`}
-        </button>
+        <div className="commit-actions">
+          <button
+            className="ai-generate-btn"
+            onClick={handleGenerateMessage}
+            disabled={isGenerating || stagedFiles.length === 0}
+            title="AI 生成提交注释"
+          >
+            {isGenerating ? '生成中...' : '✨ AI 生成'}
+          </button>
+          <button
+            className="commit-button"
+            onClick={handleCommit}
+            disabled={isCommitting || !commitMessage.trim() || stagedFiles.length === 0}
+          >
+            {isCommitting ? '提交中...' : `提交 (${stagedFiles.length})`}
+          </button>
+        </div>
       </div>
 
       {/* 文件列表 */}

@@ -1,7 +1,7 @@
 <div align="center">
 <h1>SolonCode</h1>
 <p>En open-source kodningsagent bygget med <a href="https://github.com/opensolon/solon-ai">Solon AI</a> og Java (understøtter Java8 til Java26 runtime-miljøer)</p>
-<p>Nyeste version: v2026.5.3</p>
+<p>Nyeste version: v2026.6.16</p>
 <img height="260" src="SHOW.png" />
 <img height="260" src="SHOW2.png" />
 </div>
@@ -21,7 +21,7 @@
 Installation:
 
 ```bash
-# Mac / Linux:
+# Mac / Linux / Harmony PC:
 curl -fsSL https://solon.noear.org/soloncode/setup.sh | bash
 
 # Windows (PowerShell):
@@ -36,16 +36,28 @@ Konfiguration (skal ændres efter installation):
 
 ## Kørsel
 
-Kør `soloncode`-kommandoen fra en hvilken som helst mappe i konsollen (dvs. dit arbejdsområde).
+Kør kommandoen `soloncode` (CLI-interaktiv) eller `soloncode web 0` (Web-interaktiv) fra en hvilken som helst mappe i konsollen (dvs. dit arbejdsområde).
+
+* `soloncode` (CLI-interaktiv)
 
 ```bash
 demo@MacBook-Pro ~ % soloncode
-SolonCode v2026.5.3
-/Users/noear
+SolonCode v2026.6.16 PID-74080 Model:deepseek-v4-flash
+/path/demo
 Tips: (esc) interrupt | /(tab) ls command | @(tab) ls agent
 
 User
 > 
+```
+
+* `soloncode web 0` (Web-interaktiv)
+
+```bash
+demo@MacBook-Pro ~ % soloncode web 0
+SolonCode v2026.6.16 PID-73617 Model:deepseek-v4-flash
+/path/demo
+2026-05-20 09:35
+Web interface: http://localhost:50488/
 ```
 
 Funktionstest (prøv følgende opgaver, fra enkel til kompleks):
@@ -67,11 +79,12 @@ Hvis du er interesseret i at bidrage med kode, bedes du læse [Bidragsdokumentat
 
 Hvis du bruger "soloncode" i dit projektnavn (f.eks. "soloncode-dashboard" eller "soloncode-app"), bedes du angive i README, at projektet ikke er officielt udviklet af OpenSolon-teamet og ikke har nogen tilknytning hertil.
 
-## Ofte stillede spørgsmål: Hvad er forskellen fra Claude Code og OpenCode?
+## Ofte stillede spørgsmål: Hvad er forskellen fra Claude Code?
 
 De er funktionelt lignende, med følgende nøgleforskelle:
 
-* Bygget med Java, 100% open-source.
-* Udbyderuafhængig. Kræver modelkonfiguration. Modeliteration vil mindske forskelle og reducere omkostninger, hvilket gør en udbyderuafhængig tilgang vigtig.
-* Fokuseret på terminal kommandolinje-interface (CLI), kører via systemkommandoer.
+* Bygget med Java, 100% open-source. Kompatibel med BiSheng JDK (Huawei) og Harmony PC.
+* Helt drevet og bygget med kinesiske prompter
+* Udbyderuafhængig. Konfigurer modeller efter behov. Modeliteration vil mindske forskelle og reducere omkostninger, hvilket gør fleksibel konfiguration vigtig.
+* Understøtter samtidig terminal kommandolinje-interface (CLI), browser-interface (WEB) og desktop IDE-interface (Desktop).
 * Understøtter Web, ACP-protokol til fjernkommunikation.

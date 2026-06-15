@@ -19,12 +19,13 @@ import org.noear.solon.Solon;
 import org.noear.solon.SolonApp;
 import org.noear.solon.codecli.config.AgentFlags;
 import org.noear.solon.codecli.config.AgentProperties;
+import org.noear.solon.codecli.config.AgentSettings;
 import org.noear.solon.core.util.Assert;
 import org.noear.solon.scheduling.annotation.EnableScheduling;
 import org.noear.solon.web.cors.CrossFilter;
+import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import java.net.URL;
-import java.nio.file.Paths;
 
 /**
  * Cli 应用
@@ -36,6 +37,11 @@ import java.nio.file.Paths;
 public class App {
 
     public static void main(String[] args) {
+        // 1. 移除 JUL 默认的控制台处理器
+        SLF4JBridgeHandler.removeHandlersForRootLogger();
+        // 2. 添加 SLF4J 处理器
+        SLF4JBridgeHandler.install();
+
         AgentProperties agentProps = new AgentProperties();
 
         Solon.start(App.class, args, app -> {
@@ -46,33 +52,22 @@ public class App {
     private static void initAgentProperties(SolonApp app, AgentProperties c) throws Exception {
         //加载配置文件
 
-        URL configUrl = c.getConfigUrl();
+        URL configUrl = AgentFlags.getConfigUrl();
 
         app.cfg().loadAdd(configUrl);
 
         //获取命令行运行的当前用户工作区
-        String workspace = Paths.get(AgentProperties.getUserDir()).toAbsolutePath().normalize().toString();
         app.cfg().getProp("soloncode").bindTo(c);
 
         //兼容旧的模型配置
         if (c.getChatModel() != null) {
-            c.addModel(c.getChatModel());
+            c.getModels().add(c.getChatModel());
         }
 
-        //设定默认会话id
-        String sessionId = Solon.cfg().argx().get(AgentProperties.ARG_SESSION);
-        if (Assert.isNotEmpty(sessionId)) {
-            c.setSessionId(sessionId);
-        }
-
-        //设定默认工作区
-        c.setWorkspace(workspace);
-
-        //设定系统提示词
-        c.setSystemPrompt(c.getAgentsMd());
+        initAgentSettings(app, c);
 
         //推入容器
-        app.context().wrapAndPut(AgentProperties.class, c);
+        //app.context().wrapAndPut(AgentProperties.class, c);
 
         //-----
 
@@ -99,6 +94,16 @@ public class App {
         }
     }
 
+    private static void initAgentSettings(SolonApp app, AgentProperties props) throws Exception {
+
+        AgentSettings agentSettings = AgentSettings.loadFromFile();
+
+        //与 AgentProperties 双向合并
+        agentSettings.mergeFrom(props);
+
+        app.context().wrapAndPut(AgentSettings.class, agentSettings);
+    }
+
     private static void enabledWeb(SolonApp app, AgentProperties c) {
         String port = app.cfg().argx().flagAt(1);
 
@@ -114,16 +119,15 @@ public class App {
         app.enableHttp(true);
         app.enableWebSocket(true);
         // 允许跨域（桌面端前端通过 localhost 访问 CLI 后端）
-        app.filter(new CrossFilter().pathPatterns("/ws").allowedOrigins("*"));
-        app.filter(new CrossFilter().pathPatterns("/chat/**").allowedOrigins("*"));
+        app.router().filter(new CrossFilter().pathPatterns("/ws").allowedOrigins("*"));
+        app.router().filter(new CrossFilter().pathPatterns("/chat/**").allowedOrigins("*"));
+        app.router().filter(new CrossFilter().pathPatterns("/web/**").allowedOrigins("*"));
     }
 
     private static void enabledAcp(SolonApp app, AgentProperties c) {
-        //开始控制台日志
-        if ("stdio".equals(c.getAcpTransport()) == false) {
-            app.enableHttp(true);
-            app.enableWebSocket(true);
-        }
+        //开始控制台日志(web 通讯关闭)
+        app.enableHttp(false);
+        app.enableWebSocket(false);
     }
 
     private static String findAvailablePort() {

@@ -1,11 +1,13 @@
-export type MessageType = 'user' | 'assistant' | 'reason' | 'action' | 'error';
-export type ContentType = 'reason' | 'action' | 'text' | 'error' | 'think';
+export type MessageType = 'USER' | 'ASSISTANT' | 'REASON' | 'ACTION' | 'ERROR';
+export type ContentType = 'REASON' | 'ACTION' | 'TEXT' | 'ERROR' | 'THINK' | 'HITL';
 
 export interface ContentItem {
   type: ContentType;
   text: string;
   toolName?: string;
   args?: Record<string, unknown>;
+  command?: string;
+  agentName?: string;
 }
 
 export interface MessageMetadata {
@@ -29,6 +31,7 @@ export interface Conversation {
   status: string;
   isPermanent?: boolean;
   icon?: string;
+  workspacePath?: string;
 }
 
 export interface Plugin {

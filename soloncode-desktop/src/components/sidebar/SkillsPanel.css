@@ -1,7 +1,9 @@
+/* Skills Panel */
 .skills-panel {
-  height: 100%;
   display: flex;
   flex-direction: column;
+  height: 100%;
+  overflow: hidden;
 }
 
 .skills-panel .panel-content {
@@ -9,38 +11,216 @@
   overflow-y: auto;
 }
 
-.skills-panel .file-node.disabled-item {
+/* Tab Bar */
+.skills-tab-bar {
+  display: flex;
+  border-bottom: 1px solid var(--cb-vscode-panel-border);
+  padding: 0 8px;
+  flex-shrink: 0;
+}
+
+.skills-tab {
+  flex: 1;
+  padding: 6px 0;
+  font-size: 12px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--cb-text-secondary);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.skills-tab:hover {
+  color: var(--cb-text-primary);
+}
+
+.skills-tab.active {
+  color: var(--cb-accent);
+  border-bottom-color: var(--cb-accent);
+}
+
+/* Pool Section */
+.pool-section {
+  border-bottom: 1px solid var(--cb-vscode-panel-border);
+}
+
+.pool-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background-color 0.15s;
+}
+
+.pool-header:hover {
+  background-color: var(--cb-vscode-list-hoverBackground);
+}
+
+.pool-alias {
+  font-weight: 500;
+  color: var(--cb-text-primary);
+}
+
+.pool-system-badge {
+  font-size: 10px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: rgba(var(--cb-accent-rgb, 100, 149, 237), 0.15);
+  color: var(--cb-accent);
+  margin-left: auto;
+}
+
+.pool-remove-btn {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: var(--cb-text-secondary);
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 3px;
+  opacity: 0;
+  transition: all 0.15s;
+}
+
+.pool-header:hover .pool-remove-btn {
+  opacity: 1;
+}
+
+.pool-remove-btn:hover {
+  color: #ef5350;
+  background: rgba(239, 83, 80, 0.1);
+}
+
+.skill-remove-btn {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: var(--cb-text-secondary);
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 3px;
+  opacity: 0;
+  transition: all 0.15s;
+}
+
+.file-node:hover .skill-remove-btn {
+  opacity: 1;
+}
+
+.skill-remove-btn:hover {
+  color: #ef5350;
+}
+
+/* Pool Add */
+.pool-add-section {
+  padding: 8px 12px;
+}
+
+.pool-add-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border-color: var(--cb-accent);
+  color: var(--cb-accent);
+}
+
+/* Market */
+.market-toolbar {
+  display: flex;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--cb-vscode-panel-border);
+}
+
+.market-select {
+  padding: 4px 8px;
+  font-size: 12px;
+  background: var(--cb-vscode-input-background);
+  border: 1px solid var(--cb-vscode-panel-border);
+  color: var(--cb-text-primary);
+  border-radius: 4px;
+}
+
+.market-search-input {
+  flex: 1;
+  padding: 4px 8px;
+  font-size: 12px;
+  background: var(--cb-vscode-input-background);
+  border: 1px solid var(--cb-vscode-panel-border);
+  color: var(--cb-text-primary);
+  border-radius: 4px;
+  outline: none;
+}
+
+.market-search-input:focus {
+  border-color: var(--cb-accent);
+}
+
+/* Create Form */
+.create-form {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--cb-vscode-panel-border);
+}
+
+.create-form-input {
+  width: 100%;
+  padding: 5px 8px;
+  margin-bottom: 6px;
+  font-size: 12px;
+  background: var(--cb-vscode-input-background);
+  border: 1px solid var(--cb-vscode-panel-border);
+  color: var(--cb-text-primary);
+  border-radius: 4px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.create-form-input:focus {
+  border-color: var(--cb-accent);
+}
+
+.create-form-actions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.create-form-btn {
+  padding: 4px 10px;
+  font-size: 11px;
+  cursor: pointer;
+  border: 1px solid var(--cb-vscode-panel-border);
+  background: var(--cb-vscode-input-background);
+  color: var(--cb-text-primary);
+  transition: all 0.15s;
+}
+
+.create-form-btn.confirm {
+  background: var(--cb-accent);
+  border-color: var(--cb-accent);
+  color: #fff;
+}
+
+.create-form-btn.ai-gen {
+  border-color: var(--cb-accent);
+  color: var(--cb-accent);
+}
+
+.create-form-btn:disabled {
   opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.create-form-error {
+  margin: 4px 0 0;
+  font-size: 11px;
+  color: #ef5350;
 }
 
 .tree-checkbox {
   margin-left: auto;
   accent-color: var(--cb-accent);
-  cursor: pointer;
-  flex-shrink: 0;
-}
-
-/* 分组头 */
-.skill-group-header {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 8px;
-  cursor: pointer;
-  user-select: none;
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--cb-text-secondary);
-  background-color: var(--cb-vscode-sideBar-background);
-  border-top: 1px solid var(--cb-vscode-panel-border);
-}
-
-.skill-group-header:hover {
-  background-color: var(--cb-vscode-list-hoverBackground);
-}
-
-.skill-group-label {
-  flex: 1;
 }

@@ -1,7 +1,7 @@
 <div align="center">
 <h1>SolonCode</h1>
 <p>SolonCode er en åpen kildekode-kodingsagent basert på Solon AI og Java, som støtter kjøremiljøer fra Java8 til Java26.</p>
-<p>Siste versjon: v2026.5.3</p>
+<p>Siste versjon: v2026.6.16</p>
 <img height="260" src="SHOW.png" />
 <img height="260" src="SHOW2.png" />
 </div>
@@ -21,7 +21,7 @@
 Installasjon:
 
 ```bash
-# Mac / Linux:
+# Mac / Linux / Harmony PC:
 curl -fsSL https://solon.noear.org/soloncode/setup.sh | bash
 
 # Windows (PowerShell):
@@ -36,16 +36,28 @@ Konfigurasjon (må endres etter installasjon):
 
 ## Kjøring
 
-Kjør `soloncode`-kommandoen fra hvilken som helst katalog i konsollen (dvs. arbeidsområdet ditt).
+Kjør kommandoen `soloncode` (CLI-interaktiv) eller `soloncode web 0` (Web-interaktiv) fra hvilken som helst katalog i konsollen (dvs. arbeidsområdet ditt).
+
+* `soloncode` (CLI-interaktiv)
 
 ```bash
 demo@MacBook-Pro ~ % soloncode
-SolonCode v2026.5.3
-/Users/noear
+SolonCode v2026.6.16 PID-74080 Model:deepseek-v4-flash
+/path/demo
 Tips: (esc) interrupt | /(tab) ls command | @(tab) ls agent
 
 User
 > 
+```
+
+* `soloncode web 0` (Web-interaktiv)
+
+```bash
+demo@MacBook-Pro ~ % soloncode web 0
+SolonCode v2026.6.16 PID-73617 Model:deepseek-v4-flash
+/path/demo
+2026-05-20 09:35
+Web interface: http://localhost:50488/
 ```
 
 Funksjonstesting (prøv følgende oppgaver, fra enkel til kompleks):
@@ -67,12 +79,12 @@ Hvis du er interessert i å bidra med kode, vennligst les [Bidragsdokumentasjon]
 
 Hvis du bruker "soloncode" i prosjektnavnet ditt (f.eks. "soloncode-dashboard" eller "soloncode-app"), vennligst indiker i README at prosjektet ikke er offisielt utviklet av OpenSolon-teamet og ikke har noen tilknytning.
 
-## Ofte stilte spørsmål: Hva er forskjellen fra Claude Code og OpenCode?
+## Ofte stilte spørsmål: Hva er forskjellen fra Claude Code?
 
 De er funksjonelt like, med viktige forskjeller:
 
-* Bygget med Java, 100% åpen kildekode.
+* Bygget med Java, 100% åpen kildekode. Kompatibel med BiSheng JDK (Huawei) og Harmony PC.
 * Helt drevet og bygget med kinesiske prompter
-* Leverandøruavhengig. Krever modellkonfigurasjon. Modelliterasjon vil redusere gap og kostnader, noe som gjør leverandøruavhengig tilnærming viktig.
-* Fokusert på terminal kommandolinjegrensesnitt (CLI), kjøres via systemkommandoer.
+* Leverandøruavhengig. Konfigurer modeller etter behov. Modelliterasjon vil redusere gap og kostnader, noe som gjør fleksibel konfigurasjon viktig.
+* Støtter samtidig terminal kommandolinjegrensesnitt (CLI), nettlesergrensesnitt (WEB) og skrivebords-IDE-grensesnitt (Desktop).
 * Støtter Web, ACP-protokoll for ekstern kommunikasjon.

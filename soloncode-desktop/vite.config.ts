@@ -8,11 +8,24 @@ const host = process.env.TAURI_DEV_HOST;
 export default defineConfig(async () => ({
   plugins: [react()],
 
-  // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
-  //
-  // 1. prevent Vite from obscuring rust errors
   clearScreen: false,
-  // 2. tauri expects a fixed port, fail if that port is not available
+
+  // 预打包大依赖，避免 dev 模式每次冷启动重新编译
+  optimizeDeps: {
+    include: [
+      'react',
+      'react-dom',
+      'react-markdown',
+      'react-syntax-highlighter',
+      'react-syntax-highlighter/dist/esm/styles/prism',
+      'remark-breaks',
+      '@monaco-editor/react',
+      '@xterm/xterm',
+      '@xterm/addon-fit',
+      'dexie',
+    ],
+  },
+
   server: {
     port: 1420,
     strictPort: true,
@@ -25,7 +38,6 @@ export default defineConfig(async () => ({
         }
       : undefined,
     watch: {
-      // 3. tell Vite to ignore watching `src-tauri`
       ignored: ["**/src-tauri/**"],
     },
     proxy: {
@@ -35,5 +47,21 @@ export default defineConfig(async () => ({
         secure: false
       }
     }
+  },
+
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'monaco-editor': ['@monaco-editor/react'],
+          'xterm': ['@xterm/xterm', '@xterm/addon-fit'],
+          'syntax-highlighter': ['react-syntax-highlighter', 'react-markdown', 'remark-breaks'],
+          'vendor-react': ['react', 'react-dom'],
+        },
+      },
+    },
+    cssCodeSplit: true,
+    minify: 'esbuild',
+    chunkSizeWarningLimit: 1000,
   },
 }));

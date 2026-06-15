@@ -1,7 +1,7 @@
 <div align="center">
 <h1>SolonCode</h1>
 <p>基於 Solon AI 與 Java 實現的開源編碼智能體（支援 Java8 到 Java26 環境啟動）</p>
-<p>最新版本：v2026.5.3</p>
+<p>最新版本：v2026.6.16</p>
 <img height="260" src="SHOW.png" />
 <img height="260" src="SHOW2.png" />
 </div>
@@ -21,7 +21,7 @@
 安裝：
 
 ```bash
-# Mac / Linux:
+# Mac / Linux / Harmony PC:
 curl -fsSL https://solon.noear.org/soloncode/setup.sh | bash
 
 # Windows (PowerShell):
@@ -36,20 +36,31 @@ irm https://solon.noear.org/soloncode/setup.ps1 | iex
 
 ## 執行
 
-在控制台「任意」目錄（即工作區）下，執行 `soloncode` 命令即可。
+在控制台「任意」目錄（即工作區）下，執行 `soloncode`（CLI 互動）或者 `soloncode web 0`（Web 互動）命令即可。
 
+* `soloncode`（CLI 互動）
 
 ```bash
 demo@MacBook-Pro ~ % soloncode
-SolonCode v2026.5.3
-/Users/noear
+SolonCode v2026.6.16 PID-74080 Model:deepseek-v4-flash
+/path/demo
 Tips: (esc) interrupt | /(tab) ls command | @(tab) ls agent
 
 User
 > 
 ```
 
-效果测试（分别尝试以下任务，从简单到复杂）：
+* `soloncode web 0`（Web 互動）
+
+```bash
+demo@MacBook-Pro ~ % soloncode web 0
+SolonCode v2026.6.16 PID-73617 Model:deepseek-v4-flash
+/path/demo
+2026-05-20 09:35
+Web interface: http://localhost:50488/
+```
+
+效果測試（分別嘗試以下任務，從簡單到複雜）：
 
 * `你好`
 * `用网络分析下 ai mcp 协议，然后生成个 ppt` //最好提前安装些 skill
@@ -68,11 +79,12 @@ User
 
 如果您在專案名稱中使用了 "soloncode"，請在 README 裡註明該專案不是 OpenSolon 團隊官方開發。
 
-## 常見問題：和 Claude Code、OpenCode 有什麼不同？
+## 常見問題：和 Claude Code 有什麼不同？
 
 功能上很相似，關鍵差異：
 
-* 採用 Java 實現，100% 開源。
-* 不綁定特定提供商。需要設定模型。
-* 聚焦終端命令列介面 (CLI)。
+* 採用 Java 實現，100% 開源。兼容畢昇 JDK（Huawei BiSheng JDK），兼容鴻蒙 PC（Huawei Harmony PC）。
+* 純中文提示詞驅動與構建。
+* 不綁定特定提供商。按需設定模型。模型迭代會縮小差異、降低成本，因此自由設定很重要。
+* 同時支援終端命令列介面 (CLI)、瀏覽器介面（WEB）、桌面IDE介面（Desktop）。
 * 支援 Web，ACP 協議進行遠端通訊。

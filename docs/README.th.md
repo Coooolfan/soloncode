@@ -1,7 +1,7 @@
 <div align="center">
 <h1>SolonCode</h1>
 <p>เอเจนต์การเขียนโค้ดโอเพ่นซอร์สที่สร้างด้วย <a href="https://github.com/opensolon/solon-ai">Solon AI</a> และ Java (รองรับสภาพแวดล้อมรันไทม์ Java8 ถึง Java26)</p>
-<p>เวอร์ชันล่าสุด: v2026.5.3</p>
+<p>เวอร์ชันล่าสุด: v2026.6.16</p>
 <img height="260" src="SHOW.png" />
 <img height="260" src="SHOW2.png" />
 </div>
@@ -21,7 +21,7 @@
 การติดตั้ง:
 
 ```bash
-# Mac / Linux:
+# Mac / Linux / Harmony PC:
 curl -fsSL https://solon.noear.org/soloncode/setup.sh | bash
 
 # Windows (PowerShell):
@@ -36,16 +36,28 @@ irm https://solon.noear.org/soloncode/setup.ps1 | iex
 
 ## การทำงาน
 
-รันคำสั่ง `soloncode` จากไดเรกทอรีใดก็ได้ในคอนโซล (กล่าวคือ พื้นที่ทำงานของคุณ)
+รันคำสั่ง `soloncode` (CLI แบบโต้ตอบ) หรือ `soloncode web 0` (Web แบบโต้ตอบ) จากไดเรกทอรีใดก็ได้ในคอนโซล (กล่าวคือ พื้นที่ทำงานของคุณ)
+
+* `soloncode` (CLI แบบโต้ตอบ)
 
 ```bash
 demo@MacBook-Pro ~ % soloncode
-SolonCode v2026.5.3
-/Users/noear
+SolonCode v2026.6.16 PID-74080 Model:deepseek-v4-flash
+/path/demo
 Tips: (esc) interrupt | /(tab) ls command | @(tab) ls agent
 
 User
 > 
+```
+
+* `soloncode web 0` (Web แบบโต้ตอบ)
+
+```bash
+demo@MacBook-Pro ~ % soloncode web 0
+SolonCode v2026.6.16 PID-73617 Model:deepseek-v4-flash
+/path/demo
+2026-05-20 09:35
+Web interface: http://localhost:50488/
 ```
 
 การทดสอบฟีเจอร์ (ลองใช้งานงานต่อไปนี้ จากง่ายไปยาก):
@@ -67,12 +79,12 @@ User
 
 หากคุณใช้ "soloncode" ในชื่อโปรเจกต์ของคุณ (เช่น "soloncode-dashboard" หรือ "soloncode-app") โปรดระบุใน README ว่าโปรเจกต์นี้ไม่ได้พัฒนาโดยทีม OpenSolon อย่างเป็นทางการและไม่มีความเกี่ยวข้อง
 
-## คำถามที่พบบ่อย: แตกต่างจาก Claude Code และ OpenCode อย่างไร?
+## คำถามที่พบบ่อย: แตกต่างจาก Claude Code อย่างไร?
 
 ในแง่การทำงานนั้นคล้ายคลึงกัน โดยมีความแตกต่างหลักดังนี้:
 
-* สร้างด้วย Java โอเพ่นซอร์ส 100%
+* สร้างด้วย Java โอเพ่นซอร์ส 100% รองรับ BiSheng JDK (Huawei) และ Harmony PC
 * ขับเคลื่อนและสร้างด้วยพรอมต์ภาษาจีนล้วน
-* ไม่ขึ้นกับผู้ให้บริการ ต้องการการตั้งค่าโมเดล การพัฒนาโมเดลจะช่วยลดช่องว่างและลดต้นทุน ทำให้การไม่ขึ้นกับผู้ให้บริการเป็นสิ่งสำคัญ
-* เน้นที่อินเทอร์เฟซบรรทัดคำสั่งเทอร์มินัล (CLI) รันผ่านคำสั่งระบบ
+* ไม่ขึ้นกับผู้ให้บริการ กำหนดค่าโมเดลตามต้องการ การพัฒนาโมเดลจะช่วยลดช่องว่างและลดต้นทุน ทำให้การกำหนดค่าอย่างอิสระเป็นสิ่งสำคัญ
+* รองรับพร้อมกันทั้งอินเทอร์เฟซบรรทัดคำสั่งเทอร์มินัล (CLI), อินเทอร์เฟซเบราว์เซอร์ (WEB) และอินเทอร์เฟซ IDE บนเดสก์ท็อป (Desktop)
 * รองรับ Web และโปรโตคอล ACP สำหรับการสื่อสารระยะไกล

@@ -1,16 +1,17 @@
 [versions]
-solon = "3.10.5-SNAPSHOT"
+solon = "4.0.1-SNAPSHOT"
 shadow = "9.4.1"
 jline = "3.30.9"
 lombok = "1.18.44"
 graalvmNativePlugin = "0.11.3"
 asm = "9.5"
+javaWebsocketNs = "1.1"
 
 [libraries]
 solon-parent = { module = "org.noear:solon-parent", version.ref = "solon" }
 solon-ai-harness = { module = "org.noear:solon-ai-harness" }
 solon-ai-acp = { module = "org.noear:solon-ai-acp" }
-solon-ai-skill-memory = { module = "org.noear:solon-ai-skill-memory" }
+solon-ai-talent-memory = { module = "org.noear:solon-ai-talent-memory" }
 solon-scheduling-simple = { module = "org.noear:solon-scheduling-simple" }
 solon-server-smarthttp = { module = "org.noear:solon-server-smarthttp" }
 solon-view-thymeleaf = { module = "org.noear:solon-view-thymeleaf" }
@@ -20,6 +21,7 @@ solon-logging-logback = { module = "org.noear:solon-logging-logback" }
 solon-web-cors = { module = "org.noear:solon-web-cors" }
 solon-test = { module = "org.noear:solon-test" }
 solon-aot = { module = "org.noear:solon-aot" }
+java-websocket-ns = { module = "org.noear:java-websocket-ns", version.ref = "javaWebsocketNs" }
 jansi = { module = "org.fusesource.jansi:jansi" }
 jline = { module = "org.jline:jline", version.ref = "jline" }
 lombok = { module = "org.projectlombok:lombok", version.ref = "lombok" }
